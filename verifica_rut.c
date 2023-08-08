@@ -2,7 +2,7 @@
 #include <string.h>
 
 void ingreso(char rut[]){
-    printf("Ingrese su rut: ");
+    printf("Ingrese su rut sin el digito verificador(El que esta despues del \"-\"): ");
     scanf("%12s",rut);
 }
 void limpiador(char rut[]) {
@@ -48,6 +48,8 @@ int main(){
     resultado =resultado*11;
     resultado= resultadosuma-resultado;
     resultado=11-resultado;
-    printf("%d",resultado);
+    printf("Este es tu rut completo %s-%d",rut,resultado);
+    char cosa;
+    scanf("%s",cosa);
     return 0;
 }
