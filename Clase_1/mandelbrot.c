@@ -15,8 +15,8 @@
  */
 
 #include <stdlib.h>
- #include <stdio.h>
- #include <math.h>
+#include <stdio.h>
+#include <math.h>
 
 
 void mandelbrot(char *filename, int Xmax, int Ymax, int IterationMax, double
