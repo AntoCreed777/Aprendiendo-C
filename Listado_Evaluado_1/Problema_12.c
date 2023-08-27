@@ -12,7 +12,7 @@ int main(){
     printf("Ingrese un numero: ");
     scanf("%d",&n);
     while(n>10000 || n<-10000){
-        printf("El numero debe estar entre 10.000 y -10.000Ingrese un numero: ");
+        printf("El numero debe estar entre 10.000 y -10000Ingrese un numero: ");
         scanf("%d",&n);
     }
 
