@@ -6,7 +6,7 @@
 int main(){
     //Ingreso
     int n;
-    printf("Ingrese el numero del  ultimo denominador de su serie: ");
+    printf("Ingrese el numero del ultimo denominador de su serie: ");
     scanf("%d",&n);
 
     //Sumatoria
