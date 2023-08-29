@@ -14,16 +14,16 @@ int main(){
     //Ingreso de Datos Iniciales
     float n;
     float m;
-    printf("Ingrese la cantidad de candidatos: ");
+    //printf("Ingrese la cantidad de candidatos: ");
     scanf("%f",&n);
     while(n>10000 || n<1){
-        printf("EL numero debe estar entre 1 y 10000\nIngrese la cantidad de candidatos: ");
+        //printf("EL numero debe estar entre 1 y 10000\nIngrese la cantidad de candidatos: ");
         scanf("%f",&n);
     }
-    printf("Ingrese la cantidad de electores: ");
+    //printf("Ingrese la cantidad de electores: ");
     scanf("%f",&m);
     while(m>10000 || m<1){
-        printf("EL numero debe estar entre 1 y 10000\nIngrese la cantidad de electores: ");
+        //printf("EL numero debe estar entre 1 y 10000\nIngrese la cantidad de electores: ");
         scanf("%f",&m);
     }
 
@@ -37,10 +37,10 @@ int main(){
 
     int aux;
     for(int i=0;i<m;i++){
-        printf("Ingrese el voto numero %d: ",i+1);
+        //printf("Ingrese el voto numero %d: ",i+1);
         scanf("%d",&aux);
         while(aux<1 || aux>n){
-            printf("Los numeros de los candidatos van desde 1 hasta %.0f\nIngrese el voto numero %d: ",n,i+1);
+            //printf("Los numeros de los candidatos van desde 1 hasta %.0f\nIngrese el voto numero %d: ",n,i+1);
             scanf("%d",&aux);
         }
         votos[aux-1]+=1;
@@ -49,10 +49,11 @@ int main(){
 
     //Entregas de los resultados de las votaciones
     float porcentaje;
-    printf("\n");
+    //printf("\n");
     for(int i=0;i<n;i++){
         porcentaje=(votos[i]/m)*100;
-        printf("El candicato cuyo numero es %d obtuvo un %.2f %% de aprobacion\n",i+1,porcentaje);
+        //printf("El candicato cuyo numero es %d obtuvo un %.2f %% de aprobacion\n",i+1,porcentaje);
+        printf("%.2f%%\n",porcentaje);
     }
     return 0;
 }

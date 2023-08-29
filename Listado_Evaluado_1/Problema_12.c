@@ -9,10 +9,10 @@ Escribe un único número entero que sea la suma de todos los números enteros q
 int main(){
     //Ingreso
     int n;
-    printf("Ingrese un numero: ");
+    //printf("Ingrese un numero: ");
     scanf("%d",&n);
     while(n>10000 || n<-10000){
-        printf("El numero debe estar entre 10.000 y -10000Ingrese un numero: ");
+        //printf("El numero debe estar entre 10.000 y -10000Ingrese un numero: ");
         scanf("%d",&n);
     }
 
@@ -30,7 +30,7 @@ int main(){
     }
 
     //Impresion del resultado
-    printf("El resultado es %d",resultado);
-
+    //printf("El resultado es "");
+    printf("%d",resultado);
     return 0;
 }
