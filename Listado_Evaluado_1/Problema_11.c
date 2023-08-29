@@ -2,13 +2,13 @@
 #include<stdlib.h>
 
 
-void ingreso(char mensaje[],char **cadena,int *longitud){    //Funcion que valida que solo ingresen numeros
+void ingreso(/*char mensaje[],*/char **cadena,int *longitud){    //Funcion que valida que solo ingresen numeros
     int tamal=1;
     char caracter;
     while (tamal==1){ 
         *longitud=0;
         int capacidad=0;
-        printf("%s",mensaje);
+        //printf("%s",mensaje);
         while((caracter=getchar())!='\n'){
             if (*longitud>=capacidad){
                 capacidad+=2;
@@ -21,7 +21,7 @@ void ingreso(char mensaje[],char **cadena,int *longitud){    //Funcion que valid
         for(int i=0;i<*longitud;i++){
             if((*cadena)[i]<48 || (*cadena)[i]>57){
                 tamal=1;
-                printf("Solo se aceptan numeros\n\n");
+                //printf("Solo se aceptan numeros\n\n");
                 break;
             }
         }
@@ -32,13 +32,13 @@ int main(){
     //Ingreso
     char *cadena=NULL;
     int longitud;
-    ingreso("Ingrese la cantidad de notas: ",&cadena,&longitud);
+    ingreso(/*"Ingrese la cantidad de notas: ",*/&cadena,&longitud);
     int n=atoi(cadena);
 
     while(n<1 || n>10){
         free(cadena);
         cadena=NULL;
-        ingreso("Debe estar entre 1 y 10\nIngrese la cantidad de notas: ",&cadena,&longitud);
+        ingreso(/*"Debe estar entre 1 y 10\nIngrese la cantidad de notas: ",*/&cadena,&longitud);
         n=atoi(cadena);
     }
 
@@ -52,14 +52,14 @@ int main(){
     for(int i=0;i<n;i++){
         char mensaje[30];
         sprintf(mensaje, "Ingrese la nota numero %d: ", i + 1);
-        ingreso(mensaje,&auxchar,&longitudauxchar);
+        ingreso(/*mensaje,*/&auxchar,&longitudauxchar);
         int aux=atoi(auxchar);
 
         while(aux<3 || aux>5){
             printf("La nota debe estar entre 3 y 5\n\n");
             free(auxchar);
             auxchar=NULL;
-            ingreso(mensaje,&auxchar,&longitudauxchar);
+            ingreso(/*mensaje,*/&auxchar,&longitudauxchar);
             aux=atoi(auxchar);
         }
         notas[i]=aux;
@@ -74,6 +74,10 @@ int main(){
     float media=0;
     for(int i=0;i<n;i++){
         media+=notas[i];
+        if (notas[i]==3){
+            printf("None");
+            return 0;
+        }
     }
     media=media/n;
 
@@ -81,17 +85,19 @@ int main(){
     //Si obtiene un resultado académico común “Común”
     //Si obtiene un resultado académico alto “Alto”
     //Si obtiene un resultado personal “Nombrado”.
-    if(media<4){
-        printf("None");
-    }
-    else if(media==5){
-        printf("Named");
-    }
-    else if(media>=4.5){
+    if (media >= 4.5){
+        if(media==5){
+            printf("Named");
+            return 0;
+        }
+        else{
         printf("High");
+        return 0;
+        }
     }
-    else{
+    else {
         printf("Common");
+        return 0;
     }
 
     return 0;
