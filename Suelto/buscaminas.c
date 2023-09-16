@@ -1,30 +1,64 @@
 #include<stdio.h>
 #include<ctype.h>
 #include<stdlib.h>
+#include<string.h>
 #include<time.h>
 //X significa que se mato
 //B es bandera
 //* es simbolo interno de que hay una mina
+int ingreso(){
+    int a=1;
+    int resultado;
+    while(a){
+        char array[100];
+        fgets(array,sizeof(array),stdin);
+        size_t len=strlen(array);
+        if(len>0 && array[len]=='\n'){
+            array[len-1]='\0';
+        }
+        for(size_t i=0;i<len-1;i++){
+            if(isdigit(array[i])==0){
+                printf("No es un numero\nVuelva a ingresar: ");
+                break;
+            }else{
+                a=0;
+                resultado=atoi(array);
+                break;
+            }
+        }
+    }
+    return resultado;
+}
 
 int main(){
     //Ingreso de las medidas del tablero
     int largo,ancho;
-    printf("Ingrese el tamano del tablero(Largo Ancho): ");
-    scanf("%d %d",&largo,&ancho);
-    while(isdigit(largo)!=0 ||isdigit(ancho)!=0){
-        printf("\n\nTamano invalido\nIngrese el tamano del tablero(Largo Ancho): ");
-        scanf("%d %d",&largo,&ancho);
+    printf("Ingrese el largo del tablero: ");
+    largo=ingreso();
+    while(largo<=0 || largo>20){
+        system("cls");
+        printf("Tamano invalido\nIngrese el largo del tablero: ");
+        largo=ingreso();
     }
-    
+    system("cls");
+    printf("Ingrese el ancho del tablero: ");
+    ancho=ingreso();
+    while(ancho<=0 || ancho>20){
+        system("cls");
+        printf("Tamano invalido\nIngrese el ancho del tablero: ");
+        ancho=ingreso();
+    }
+    system("cls");
     //Ingreso de la cantidad de minas en el tablero
     int minas;
     printf("Ingrese la cantidad de minas: ");
-    scanf("%d",&minas);
-    while(isdigit(minas)!=0){
-        printf("\n\nCantidad invalida\nIngrese la cantidad de minas: ");
-        scanf("%d",&minas);
+    minas=ingreso();
+    while(minas<=0 || minas>(largo*ancho/2)){
+        system("cls");
+        printf("Cantidad invalida(Maximo de %d minas)\nIngrese la cantidad de minas: ",largo*ancho/2);
+        minas=ingreso();
     }
-    
+    system("cls");
     //declaracion del tablero
     char tablero[largo][ancho];
     for(int i=0;i<largo;i++){
@@ -91,7 +125,7 @@ int main(){
 
     while(falta!=0){
         ///*
-        for(int i=0;i<largo;i++){
+        for(int i=0;i<largo;i++){   //tablero del sistema
             for(int j=0;j<ancho;j++){
                 printf("%c\t",tablero[i][j]);
             }
@@ -100,7 +134,7 @@ int main(){
         
         printf("\n\n\n");
         //*/
-        for(int i=0;i<largo;i++){
+        for(int i=0;i<largo;i++){   //Tablero que ve el jugador
             for(int j=0;j<ancho;j++){
                 printf("%c\t",tablero2[i][j]);
             }
@@ -108,20 +142,34 @@ int main(){
         }
         
         int x,y;
-        printf("Ingrese las coordenadas: ");
-        scanf("%d %d",&x,&y);
-
+        printf("Faltan %d casillas\n",falta);
+        
+        printf("Ingrese la coordenada X: ");
+        x=ingreso();
+        while(x<=0 || x>ancho){
+            printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",ancho);
+            x=ingreso();
+        }
+        
+        printf("Ingrese la coordenada Y: ");
+        y=ingreso();
+        while(x<=0 || x>largo){
+            printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",largo);
+            y=ingreso();
+        }
         if(tablero[largo-y][x-1]=='*'){
             printf("\n\nHAS PERDIDO, MEJOR SUERTE PARA LA PROXIMA");
             return 0;
         }
         
-        tablero2[largo-y][x-1]=tablero[largo-y][x-1];
-        if(tablero2[largo-y][x-1]!='#'){
+        
+        if(tablero2[largo-y][x-1]=='#'){
             falta--;
         }
 
-        if(tablero[largo-y][x-1]=='-'){
+        tablero2[largo-y][x-1]=tablero[largo-y][x-1];
+        
+        if(tablero[largo-y][x-1]=='-'){     //Si no hay nada alrededor de la casilla, se imprime todo alrededor de la casilla
             if(tablero[largo-y+1][x-1]!='*' && largo-y+1<largo && tablero2[largo-y+1][x-1]=='#'){
                 tablero2[largo-y+1][x-1]=tablero[largo-y+1][x-1];
                 falta--;
@@ -135,7 +183,7 @@ int main(){
                 falta--;
             }
             if(tablero[largo-y+1][x-2]!='*' && largo-y+1<largo && x-2>=0 && tablero2[largo-y+1][x-2]=='#'){
-                tablero2[largo-y+1][x-2]=tablero[largo-y][x-2];
+                tablero2[largo-y+1][x-2]=tablero[largo-y+1][x-2];
                 falta--;
             }
             if(tablero[largo-y-1][x]!='*' && largo-y-1>=0 && x<ancho && tablero2[largo-y-1][x]=='#'){
@@ -155,8 +203,9 @@ int main(){
                 falta--;
             }
         }
-        
-        system("cls");  //Limpia terminal
+        if(falta!=0){
+            system("cls");  //Limpia terminal
+        }
     }
     printf("FELISICADES, HAS GANADO");
     return 0;
