@@ -153,7 +153,7 @@ int main(){
         
         printf("Ingrese la coordenada Y: ");
         y=ingreso();
-        while(x<=0 || x>largo){
+        while(y<=0 || y>largo){ 
             printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",largo);
             y=ingreso();
         }
