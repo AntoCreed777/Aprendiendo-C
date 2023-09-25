@@ -30,6 +30,24 @@ int ingreso(){
     return resultado;
 }
 
+void imprimir_tableros(int largo, int ancho,char tablero[largo][ancho],char tablero2[largo][ancho]){
+        for(int i=0;i<largo;i++){   //tablero del sistema
+            for(int j=0;j<ancho;j++){
+                printf("%c\t",tablero[i][j]);
+            }
+            printf("\n");
+        }
+        
+        printf("\n\n\n");
+
+        for(int i=0;i<largo;i++){   //Tablero que ve el jugador
+            for(int j=0;j<ancho;j++){
+                printf("%c\t",tablero2[i][j]);
+            }
+            printf("\n");
+        }
+}
+
 int main(){
     //Ingreso de las medidas del tablero
     int largo,ancho;
@@ -124,88 +142,153 @@ int main(){
 
 
     while(falta!=0){
+        imprimir_tableros(largo,ancho,tablero,tablero2);
+        char accion;
+        printf("Que desea hacer(B o M): ");
+        scanf("%c",&accion);
+        if(isupper(accion)){
+            accion=tolower(accion);
+        }
+        while(accion!='m' && accion!='b'){
+            printf("Ingreso invalido\nQue desea hacer(B o M): ");
+            scanf("%c",&accion);
+            if(isupper(accion)){
+                accion=tolower(accion);
+            }
+        }
         ///*
-        for(int i=0;i<largo;i++){   //tablero del sistema
-            for(int j=0;j<ancho;j++){
-                printf("%c\t",tablero[i][j]);
-            }
-            printf("\n");
-        }
-        
-        printf("\n\n\n");
-        //*/
-        for(int i=0;i<largo;i++){   //Tablero que ve el jugador
-            for(int j=0;j<ancho;j++){
-                printf("%c\t",tablero2[i][j]);
-            }
-            printf("\n");
-        }
-        
-        int x,y;
-        printf("Faltan %d casillas\n",falta);
-        
-        printf("Ingrese la coordenada X: ");
-        x=ingreso();
-        while(x<=0 || x>ancho){
-            printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",ancho);
-            x=ingreso();
-        }
-        
-        printf("Ingrese la coordenada Y: ");
-        y=ingreso();
-        while(y<=0 || y>largo){ 
-            printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",largo);
-            y=ingreso();
-        }
-        if(tablero[largo-y][x-1]=='*'){
-            printf("\n\nHAS PERDIDO, MEJOR SUERTE PARA LA PROXIMA");
-            return 0;
-        }
-        
-        
-        if(tablero2[largo-y][x-1]=='#'){
-            falta--;
-        }
+        system("cls");
 
-        tablero2[largo-y][x-1]=tablero[largo-y][x-1];
-        
-        if(tablero[largo-y][x-1]=='-'){     //Si no hay nada alrededor de la casilla, se imprime todo alrededor de la casilla
-            if(tablero[largo-y+1][x-1]!='*' && largo-y+1<largo && tablero2[largo-y+1][x-1]=='#'){
-                tablero2[largo-y+1][x-1]=tablero[largo-y+1][x-1];
+        if(accion=='m'){
+            imprimir_tableros(largo,ancho,tablero,tablero2);
+            int x,y;
+            printf("Faltan %d casillas\n",falta);
+            
+            printf("Ingrese la coordenada X: ");
+            x=ingreso();
+            while(x<=0 || x>ancho){
+                printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",ancho);
+                x=ingreso();
+            }
+            
+            printf("Ingrese la coordenada Y: ");
+            y=ingreso();
+            while(y<=0 || y>largo){ 
+                printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",largo);
+                y=ingreso();
+            }
+            if(tablero[largo-y][x-1]=='*'){
+                printf("\n\nHAS PERDIDO, MEJOR SUERTE PARA LA PROXIMA");
+                return 0;
+            }
+            
+            
+            if(tablero2[largo-y][x-1]=='#'){
                 falta--;
             }
-            if(tablero[largo-y-1][x-1]!='*' && largo-y-1>=0 && tablero2[largo-y-1][x-1]=='#'){
-                tablero2[largo-y-1][x-1]=tablero[largo-y-1][x-1];
-                falta--;
-            }
-            if(tablero[largo-y+1][x]!='*' && largo-y+1<largo && x<ancho && tablero2[largo-y+1][x]=='#'){
-                tablero2[largo-y+1][x]=tablero[largo-y+1][x];
-                falta--;
-            }
-            if(tablero[largo-y+1][x-2]!='*' && largo-y+1<largo && x-2>=0 && tablero2[largo-y+1][x-2]=='#'){
-                tablero2[largo-y+1][x-2]=tablero[largo-y+1][x-2];
-                falta--;
-            }
-            if(tablero[largo-y-1][x]!='*' && largo-y-1>=0 && x<ancho && tablero2[largo-y-1][x]=='#'){
-                tablero2[largo-y-1][x]=tablero[largo-y-1][x];
-                falta--;
-            }
-            if(tablero[largo-y-1][x-2]!='*' && largo-y-1>=0 && x-2>=0 && tablero2[largo-y-1][x-2]=='#'){
-                tablero2[largo-y-1][x-2]=tablero[largo-y-1][x-2];
-                falta--;
-            }
-            if(tablero[largo-y][x]!='*' && x<ancho && tablero2[largo-y][x]=='#'){
-                tablero2[largo-y][x]=tablero[largo-y][x];
-                falta--;
-            }
-            if(tablero[largo-y][x-2]!='*' && x-2>=0 && tablero2[largo-y][x-2]=='#'){
-                tablero2[largo-y][x-2]=tablero[largo-y][x-2];
-                falta--;
+
+            tablero2[largo-y][x-1]=tablero[largo-y][x-1];
+            
+            if(tablero[largo-y][x-1]=='-'){     //Si no hay nada alrededor de la casilla, se imprime todo alrededor de la casilla
+                if(tablero[largo-y+1][x-1]!='*' && largo-y+1<largo && tablero2[largo-y+1][x-1]=='#'){
+                    tablero2[largo-y+1][x-1]=tablero[largo-y+1][x-1];
+                    falta--;
+                }
+                if(tablero[largo-y-1][x-1]!='*' && largo-y-1>=0 && tablero2[largo-y-1][x-1]=='#'){
+                    tablero2[largo-y-1][x-1]=tablero[largo-y-1][x-1];
+                    falta--;
+                }
+                if(tablero[largo-y+1][x]!='*' && largo-y+1<largo && x<ancho && tablero2[largo-y+1][x]=='#'){
+                    tablero2[largo-y+1][x]=tablero[largo-y+1][x];
+                    falta--;
+                }
+                if(tablero[largo-y+1][x-2]!='*' && largo-y+1<largo && x-2>=0 && tablero2[largo-y+1][x-2]=='#'){
+                    tablero2[largo-y+1][x-2]=tablero[largo-y+1][x-2];
+                    falta--;
+                }
+                if(tablero[largo-y-1][x]!='*' && largo-y-1>=0 && x<ancho && tablero2[largo-y-1][x]=='#'){
+                    tablero2[largo-y-1][x]=tablero[largo-y-1][x];
+                    falta--;
+                }
+                if(tablero[largo-y-1][x-2]!='*' && largo-y-1>=0 && x-2>=0 && tablero2[largo-y-1][x-2]=='#'){
+                    tablero2[largo-y-1][x-2]=tablero[largo-y-1][x-2];
+                    falta--;
+                }
+                if(tablero[largo-y][x]!='*' && x<ancho && tablero2[largo-y][x]=='#'){
+                    tablero2[largo-y][x]=tablero[largo-y][x];
+                    falta--;
+                }
+                if(tablero[largo-y][x-2]!='*' && x-2>=0 && tablero2[largo-y][x-2]=='#'){
+                    tablero2[largo-y][x-2]=tablero[largo-y][x-2];
+                    falta--;
+                }
             }
         }
-        if(falta!=0){
-            system("cls");  //Limpia terminal
+        else{
+            imprimir_tableros(largo,ancho,tablero,tablero2);
+            char bandera;
+            printf("Que desea hacer(Quitar(q) o poner(p)): ");
+            scanf("%c",&bandera);
+            if(isupper(bandera)){
+                bandera=tolower(bandera);
+            }
+            while(bandera!='q' && bandera!='p'){
+                printf("Ingreso invalido\nQue desea hacer(Quitar(q) o poner(p)): ");
+                scanf("%c",&bandera);
+                if(isupper(bandera)){
+                    bandera=tolower(bandera);
+                }
+            }
+            if(bandera=='p'){
+                int x,y;
+                printf("Ingrese la coordenada X: ");
+                x=ingreso();
+                while(x<=0 || x>ancho){
+                    printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",ancho);
+                    x=ingreso();
+                }
+                
+                printf("Ingrese la coordenada Y: ");
+                y=ingreso();
+                while(y<=0 || y>largo){ 
+                    printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",largo);
+                    y=ingreso();
+                }
+                
+                if(tablero2[largo-y][x-1]!='#'){
+                    printf("\n\nUbicacion Invalida\nPresione para continuar");
+                    getchar();
+                }
+                else{
+                    tablero2[largo-y][x-1]='B';
+                }
+            }
+            else{
+                int x,y;
+                printf("Ingrese la coordenada X: ");
+                x=ingreso();
+                while(x<=0 || x>ancho){
+                    printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",ancho);
+                    x=ingreso();
+                }
+                
+                printf("Ingrese la coordenada Y: ");
+                y=ingreso();
+                while(y<=0 || y>largo){ 
+                    printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",largo);
+                    y=ingreso();
+                }
+                
+                if(tablero2[largo-y][x-1]!='B'){
+                    printf("\n\nUbicacion Invalida\nPresione para continuar");
+                    getchar();
+                }
+                else{
+                    tablero2[largo-y][x-1]='#';
+                }
+            }
         }
+        system("cls");
     }
     printf("FELISICADES, HAS GANADO");
     return 0;
