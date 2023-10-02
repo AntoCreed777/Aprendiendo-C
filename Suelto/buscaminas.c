@@ -226,70 +226,35 @@ int main(){
         }
         else{
             imprimir_tableros(largo,ancho,tablero,tablero2);
-            char bandera;
-            printf("Que desea hacer(Quitar(q) o poner(p)): ");
-            scanf("%c",&bandera);
-            if(isupper(bandera)){
-                bandera=tolower(bandera);
-            }
-            while(bandera!='q' && bandera!='p'){
-                printf("Ingreso invalido\nQue desea hacer(Quitar(q) o poner(p)): ");
-                scanf("%c",&bandera);
-                if(isupper(bandera)){
-                    bandera=tolower(bandera);
-                }
-            }
-            if(bandera=='p'){
-                int x,y;
-                printf("Ingrese la coordenada X: ");
+            int x,y;
+            printf("Ingrese la coordenada X: ");
+            x=ingreso();
+            while(x<=0 || x>ancho){
+                printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",ancho);
                 x=ingreso();
-                while(x<=0 || x>ancho){
-                    printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",ancho);
-                    x=ingreso();
-                }
-                
-                printf("Ingrese la coordenada Y: ");
-                y=ingreso();
-                while(y<=0 || y>largo){ 
-                    printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",largo);
-                    y=ingreso();
-                }
-                
-                if(tablero2[largo-y][x-1]!='#'){
-                    printf("\n\nUbicacion Invalida\nPresione para continuar");
-                    getchar();
-                }
-                else{
-                    tablero2[largo-y][x-1]='B';
-                }
             }
-            else{
-                int x,y;
-                printf("Ingrese la coordenada X: ");
-                x=ingreso();
-                while(x<=0 || x>ancho){
-                    printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",ancho);
-                    x=ingreso();
-                }
-                
-                printf("Ingrese la coordenada Y: ");
+            
+            printf("Ingrese la coordenada Y: ");
+            y=ingreso();
+            while(y<=0 || y>largo){ 
+                printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",largo);
                 y=ingreso();
-                while(y<=0 || y>largo){ 
-                    printf("Coordenada fuera de rango(debe estar entre 1 y %d)\nVuelva a ingresar: ",largo);
-                    y=ingreso();
-                }
-                
-                if(tablero2[largo-y][x-1]!='B'){
-                    printf("\n\nUbicacion Invalida\nPresione para continuar");
-                    getchar();
-                }
-                else{
-                    tablero2[largo-y][x-1]='#';
-                }
+            }
+            if(tablero2[largo-y][x-1]!='#' && tablero2[largo-y][x-1]!='B'){
+                printf("Coordenada invalida\n\nPresione para continuar");
+                getchar();
+                continue;
+            }
+
+            if(tablero2[largo-y][x-1]!='#'){
+                tablero2[largo-y][x-1]='#';
+            }
+            else if(tablero2[largo-y][x-1]!='B'){
+                tablero2[largo-y][x-1]='B';
             }
         }
         system("cls");
     }
-    printf("FELISICADES, HAS GANADO");
+    printf("FELISITADES, HAS GANADO");
     return 0;
 }
