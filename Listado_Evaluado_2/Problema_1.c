@@ -25,6 +25,7 @@ void ingreso(char mensaje[],int *numero){    //Funcion como el getline que valid
             if((string)[i]<48 || (string)[i]>57){
                 tamal=1;
                 printf("Solo se aceptan numeros\n");
+                string=NULL;
                 break;
             }
         }
@@ -40,9 +41,6 @@ int main(){
     //Ingreso y validacion del valor M
     int M;
     ingreso("Ingrese el numero delimitador:   ",&M);
-
-
-printf("%d %d",N, M);
 
     //Creacion y llenado de la matriz A que guardara los numeros que ingrese el usuario
 

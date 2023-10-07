@@ -26,6 +26,7 @@ void ingreso(char mensaje[],int *numero){    //Funcion como el getline que valid
             if((string)[i]<48 || (string)[i]>57){
                 tamal=1;
                 printf("Solo se aceptan numeros\n");
+                string=NULL;
                 break;
             }
         }
@@ -62,6 +63,7 @@ int main(){
     int arreglo[N];
     int aux;
     char mensaje[40];
+    int cantidad=0;
     for(int i=0;i<N;i++){
         sprintf(mensaje,"Ingrese el numero de la posicion %d:   ",i+1);
         ingreso(mensaje,&aux);
@@ -69,7 +71,14 @@ int main(){
             printf("Valor fuera de rango\n");
             ingreso(mensaje,&aux);
         }
+        for(int j=0;j<cantidad;j++){
+            if(aux==arreglo[j]){
+                printf("\nNo se pueden repetir los numeros\n");
+                exit(0);
+            }
+        }
         arreglo[i]=aux;
+        cantidad++;
     }
 
     //Busqueda de la permutacion mas larga
