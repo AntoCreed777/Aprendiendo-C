@@ -53,6 +53,15 @@ int permutacion(int arreglo[],int tamano,int posicioni){    //Funcion que busca 
 
 }
 
+int validacion(int cantidad,int aux,int arreglo[]){
+    for(int j=0;j<cantidad;j++){
+        if(aux==arreglo[j]){
+            return 1;
+        }
+    }
+    return 0;
+}
+
 int main(){
     //Ingreso y validacion del valor N
     int N;
@@ -67,15 +76,14 @@ int main(){
     for(int i=0;i<N;i++){
         sprintf(mensaje,"Ingrese el numero de la posicion %d:   ",i+1);
         ingreso(mensaje,&aux);
-        while(aux>=N || aux<0){
-            printf("Valor fuera de rango\n");
-            ingreso(mensaje,&aux);
-        }
-        for(int j=0;j<cantidad;j++){
-            if(aux==arreglo[j]){
-                printf("\nNo se pueden repetir los numeros\n");
-                exit(0);
+        while(aux>=N || aux<0 || validacion(cantidad,aux,arreglo)){
+            if(validacion(cantidad,aux,arreglo)){
+                printf("\nNo se pueden repetir los numeros\n\n");
             }
+            else{
+                printf("Valor fuera de rango\n");
+            }
+            ingreso(mensaje,&aux);
         }
         arreglo[i]=aux;
         cantidad++;
@@ -90,7 +98,7 @@ int main(){
         }
     }
     
-    printf("La permutacion mas larga es de %.0f",permularga);     //Se imprime el resultado
+    printf("\nLa permutacion mas larga es de %.0f",permularga);     //Se imprime el resultado
 
     return 0;
 }
