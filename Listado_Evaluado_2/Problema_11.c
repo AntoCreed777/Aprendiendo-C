@@ -15,10 +15,10 @@ void diagonal(int n,int **matriz,int posicionx,int posiciony,int *contador){
 int main(){
     //Declaracion e ingreso de n, que almacena el tamano del lado del cuadrado
     int n;
-    printf("Ingrese el tamano del tablero de NxN:   ");
+    //printf("Ingrese el tamano del tablero de NxN:   ");
     scanf("%d",&n);
     while(n<1 || n>100){    //Validacion de n
-        printf("\nValor fuera de rango\nIngrese el tamano del tablero de NxN:   ");
+        //printf("\nValor fuera de rango\nIngrese el tamano del tablero de NxN:   ");
         scanf("%d",&n);
     }
 
@@ -40,10 +40,10 @@ int main(){
         }
     }
 
-    printf("\n");
+    //printf("\n");
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
-            printf("%d\t",matriz[i][j]);
+            printf("%d ",matriz[i][j]);
         }
         printf("\n");
     }
