@@ -30,9 +30,9 @@ int main(){
         numeros[0]-=5;  //Se le resta 5 para obtener el numero original
     }
     else{
-        numeros[0] += 21;
+        numeros[0] += 21;   //Forma compacta de 26+(numeros[0]-5) para deshacer la suma del 5 y el modulo que se le aplico al numero inicial
     }
-    
+
     for(int i=0;i<len;i++){     //Impresion de las letras resultantes
         printf("%c",(char)(numeros[i]+'a'));
     }
