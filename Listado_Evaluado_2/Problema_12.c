@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
 int main(){
     //Declaracion del String que recibira la palabra entrante
     char entrada[100];
@@ -7,7 +9,7 @@ int main(){
     int len=strlen(entrada);
 
     //Declaracion del array que almacenara los numeros de las letras
-    int numeros[len];
+    int *numeros=(int*)malloc(sizeof(int)*len);
 
     //Obtengo los numeros que representan cada letra
     for(int i=0;i<len;i++){
@@ -40,6 +42,8 @@ int main(){
     for(int i=0;i<len;i++){     //Impresion de las letras finales
         printf("%c",entrada[i]);
     }
+    
+    free(numeros);
     
     return 0;
 }

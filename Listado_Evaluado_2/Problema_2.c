@@ -71,8 +71,7 @@ int main(){
 
     //Creacion y llenado del arreglo que guardara los numeros
 
-    int *arreglo=NULL;
-    arreglo=(int*)malloc(sizeof(int)*N);
+    int *arreglo=(int*)malloc(sizeof(int)*N);
     int aux;
     char mensaje[40];
     int cantidad=0;
