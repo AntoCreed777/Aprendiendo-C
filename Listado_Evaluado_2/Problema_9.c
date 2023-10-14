@@ -43,5 +43,7 @@ int main(){
     //Imprimo el resultado de inmediato
     printf("%s",resultado);
 
+    free(resultado);
+
     return 0;
 }

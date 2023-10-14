@@ -1,6 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
 
-void diagonal(int n,int matriz[][n],int posicionx,int posiciony,int *contador){
+void diagonal(int n,int **matriz,int posicionx,int posiciony,int *contador){
     int x=posicionx;
     int y=posiciony;
     while(x<n && y<n){
@@ -21,7 +22,10 @@ int main(){
         scanf("%d",&n);
     }
 
-    int matriz[n][n];
+    int **matriz=(int**)malloc(sizeof(int*)*n);
+    for(int i=0;i<n;i++){
+        matriz[i]=(int*)malloc(sizeof(int)*n);
+    }
 
     int contador=1;
 
@@ -36,13 +40,19 @@ int main(){
         }
     }
 
-
+    printf("\n");
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
             printf("%d\t",matriz[i][j]);
         }
         printf("\n");
     }
+
+    for (int i = 0; i < n; i++) {
+        free(matriz[i]);
+    }
+
+    free(matriz);
 
     return 0;
 }
