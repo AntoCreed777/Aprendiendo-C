@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 
 void impresion_matriz(char matriz[8][8]){   //Impresion del tablero
     printf("  ----------------\n");     //Marco Superior
