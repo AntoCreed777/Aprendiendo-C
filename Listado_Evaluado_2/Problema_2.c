@@ -32,11 +32,13 @@ void ingreso(char mensaje[],int *numero){    //Funcion como el getline que valid
         }
     }
     *numero=atoi(string);
+    free(string);
 }
 
 int permutacion(int arreglo[],int tamano,int posicioni){    //Funcion que busca la permutacion mas larga
     int contador=0;     //Cuenta cuantos ciclos sque an realizados en la permutacion
-    int visitados[tamano];  //Reguistra los valores por los cuales ya se a pasado
+    int *visitados=NULL;  //Reguistra los valores por los cuales ya se a pasado
+    visitados=(int*)malloc(sizeof(int)*tamano);
     visitados[0]=posicioni;
     int posicion=posicioni; //Guarda la posicion a la que debe ir
 
@@ -50,7 +52,7 @@ int permutacion(int arreglo[],int tamano,int posicioni){    //Funcion que busca 
         contador++;
         visitados[contador]=posicion;   //Se agrega la posicion al arreglo de posiciones ya visitadas
     }
-
+    free(visitados);
 }
 
 int validacion(int cantidad,int aux,int arreglo[]){
@@ -69,7 +71,8 @@ int main(){
 
     //Creacion y llenado del arreglo que guardara los numeros
 
-    int arreglo[N];
+    int *arreglo=NULL;
+    arreglo=(int*)malloc(sizeof(int)*N);
     int aux;
     char mensaje[40];
     int cantidad=0;
@@ -99,6 +102,8 @@ int main(){
     }
     
     printf("\nLa permutacion mas larga es de %.0f",permularga);     //Se imprime el resultado
+
+    free(arreglo);
 
     return 0;
 }

@@ -31,6 +31,7 @@ void ingreso(char mensaje[],int *numero){    //Funcion como el getline que valid
         }
     }
     *numero=atoi(string);
+    free(string);
 }
 
 int main(){
@@ -95,5 +96,8 @@ int main(){
     for(int i=0;i<cantidadC;i++){
         printf("%d\t",C[i]);
     }
+
+    free(B);
+    free(C);
     return 0;
 }

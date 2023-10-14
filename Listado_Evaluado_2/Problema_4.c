@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 
 int filas(int matriz[9][9],int fila){
     int visto[9];
@@ -64,7 +63,7 @@ int main(){
             else{
                 printf("No es una solucion valida para el Sudoku\nProblemas en la columna %d",i+1);
             }
-            exit(0);
+            return 0;
         }
     }
 
@@ -72,12 +71,12 @@ int main(){
         for(int j=0;j<9;j+=3){
             if(submatris(matriz,i,j)){
                 printf("No es una solucion valida para el Sudoku\nProblemas en la submatriz de esquina superior derecha (%d,%d)",i+1,j+1);
-                exit(0);
+                return 0;
             }
         }
     }
 
-    printf("Es una matriz valida");
+    printf("Es una matriz valida como solucion del Sudoku");
 
     return 0;
 }
