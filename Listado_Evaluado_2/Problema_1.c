@@ -30,7 +30,7 @@ void ingreso(char mensaje[],int *numero){    //Funcion como el getline que valid
             }
         }
     }
-    *numero=(int)(string);
+    *numero=atoi(string);
     free(string);
 }
 
