@@ -1,65 +1,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void ingreso(char mensaje[],int *numero){    //Funcion como el getline que valida que solo ingresen numeros
-    int tamal=1;
-    char *string=NULL;
-    while (tamal==1){ 
-        int longitud=0;
-        int capacidad=0;
-        char caracter;
-        printf("%s",mensaje);
-        while((caracter=getchar())!='\n'){
-            if (longitud>=capacidad){
-                capacidad+=2;
-                string=(char*)realloc(string,sizeof(char)*capacidad);
-            }
-            (string)[longitud]=caracter;
-            (longitud)++;
-        }
-        if(string==NULL){
-            continue;
-        }
-        tamal=0;
-        for(int i=0;i<longitud;i++){
-            if((string)[i]<48 || (string)[i]>57){
-                tamal=1;
-                printf("Solo se aceptan numeros\n");
-                string=NULL;
-                break;
-            }
-        }
-    }
-    *numero=atoi(string);
-    free(string);
-}
-
 int main(){
     //Ingreso y validacion del valor N
     int N;
-    ingreso("Ingrese la cantidad de numeros que ingresara:   ",&N);
+    printf("Ingrese la cantidad de numeros que ingresara:   "); 
+    while(scanf("%d",&N)!=1 || N<=0){
+        printf("Error de entrada\n\nIngrese la cantidad de numeros que ingresara:   ");
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF) {}  // Limpio la  entrada para eliminar caracteres no válidos
+    }
 
     //Ingreso y validacion del valor M
     int M;
-    ingreso("Ingrese el numero delimitador:   ",&M);
+    printf("Ingrese el numero delimitador:   ");
+    while(scanf("%d",&M)!=1 || M<=0){
+        printf("Error de entrada\n\nIngrese el numero delimitador:   ");
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF) {}  // Limpio la  entrada para eliminar caracteres no válidos
+    }
 
     //Creacion y llenado de la matriz A que guardara los numeros que ingrese el usuario
 
-    int A[N];
+    int *A=(int*)malloc(sizeof(int)*N);
     int aux;
-    char mensaje[40];
     for(int i=0;i<N;i++){
-        sprintf(mensaje,"Ingrese el numero de la posicion %d:   ",i+1);
-        ingreso(mensaje,&aux);
+        printf("Ingrese el numero de la posicion %d:   ",i+1);
+        while(scanf("%d",&aux)!=1 || aux<=0){
+            printf("Error de entrada\n\nIngrese el numero de la posicion %d:   ",i+1);
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF) {}  // Limpio la  entrada para eliminar caracteres no válidos
+        }
         A[i]=aux;
     }
     
     //Creacion de las matrices B yC
 
-    int *B;
-    B=(int*)malloc(sizeof(int)*N);
-    int *C;
-    C=(int*)malloc(sizeof(int)*N);
+    int *B=(int*)malloc(sizeof(int)*N);
+    int *C=(int*)malloc(sizeof(int)*N);
 
     //Comparo los elementos de A con el numero M para repartirlos entre B o C
     
@@ -97,6 +75,7 @@ int main(){
         printf("%d\t",C[i]);
     }
 
+    free(A);
     free(B);
     free(C);
     return 0;
