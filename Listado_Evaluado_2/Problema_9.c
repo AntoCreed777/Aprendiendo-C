@@ -38,12 +38,12 @@ int main(){
         scanf("%s",ingreso);
         strncat(resultado,ingreso,m);
     }
-    resultado[n]='\0';
+    resultado[n]='\0';  //Se agrega al final del string el caracter de fin de texto
 
     //Imprimo el resultado de inmediato
     printf("%s",resultado);
 
-    free(resultado);
+    free(resultado);    //Se libera la memoria usada por resultado
 
     return 0;
 }
