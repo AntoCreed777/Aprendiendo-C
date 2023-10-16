@@ -26,10 +26,10 @@ int main(){
         numeros[i]-=numeros[i-1];
     }
 
-    if(numeros[0]>= 5){
-        numeros[0]-=5;  //Se le resta 5 para obtener el numero original
+    if(numeros[0]>= 5){     //Si es mayor o igual a 5 significa que no se aplico ningun modulo de 26
+        numeros[0]-=5;      //Se le resta 5 para obtener el numero original
     }
-    else{
+    else{                   //Si no significa que si se le aplico un modulo de 26 por lo que cambia lo que hay que hacer
         numeros[0] += 21;   //Forma compacta de 26+(numeros[0]-5) para deshacer la suma del 5 y el modulo que se le aplico al numero inicial
     }
 
