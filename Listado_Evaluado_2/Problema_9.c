@@ -2,53 +2,24 @@
 #include <string.h>
 #include <stdlib.h>
 
-void ingreso(char mensaje[],int *numero){    //Funcion como el getline que valida que solo ingresen numeros
-    int tamal=1;
-    char *string=NULL;
-    while (tamal==1){ 
-        int longitud=0;
-        int capacidad=0;
-        char caracter;
-        printf("%s",mensaje);
-        while((caracter=getchar())!='\n'){
-            if (longitud>=capacidad){
-                capacidad+=2;
-                string=(char*)realloc(string,sizeof(char)*capacidad);
-            }
-            (string)[longitud]=caracter;
-            (longitud)++;
-        }
-        if(string==NULL){
-            continue;
-        }
-        tamal=0;
-        for(int i=0;i<longitud;i++){
-            if((string)[i]<48 || (string)[i]>57){
-                tamal=1;
-                printf("Solo se aceptan numeros\n");
-                string=NULL;
-                break;
-            }
-        }
-    }
-    *numero=atoi(string);
-    free(string);
-}
-
 int main(){
     //Declaracion de variables
     int n,m;
 
     //Ingreso de n que guardara la cantidad de strings que ingresaran
-    ingreso("Ingrese la cantidad de Cadenas de Caracteres:   ",&n);
-    while(n<=0){
-        ingreso("Debe ser un numero mayor a 0\nIngrese la cantidad de Cadenas de Caracteres: ",&n);
+    printf("Ingrese la cantidad de Cadenas de Caracteres:   ");
+    while(scanf("%d",&n)!=1 || n<=0){   //Ingreso del numero
+        printf("Error de entrada\n\nIngrese la cantidad de Cadenas de Caracteres:   ");
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF) {}  // Limpio la  entrada para eliminar caracteres no válidos
     }
 
     //Ingreso de m que guardara la cantidad de letras que se guardaran de cada String
-    ingreso("Ingrese la cantidad de Letras a copiar:   ",&m);
-    while(m<=0){
-        ingreso("Debe ser un numero mayor a 0\nIngrese la cantidad de Letras a copiar: ",&m);
+    printf("Ingrese la cantidad de Letras a copiar:   ");
+    while(scanf("%d",&m)!=1 || m<=0){   //Ingreso del numero
+        printf("Error de entrada\n\nIngrese la cantidad de Letras a copiar:   ");
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF) {}  // Limpio la  entrada para eliminar caracteres no válidos
     }
 
     char ingreso[20];   //Declaracion de la variable que guardara a las palabras que ingresen

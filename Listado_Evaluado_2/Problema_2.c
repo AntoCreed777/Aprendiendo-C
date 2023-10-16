@@ -1,11 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 int permutacion(int arreglo[],int tamano,int posicioni){    //Funcion que busca la permutacion mas larga
     int contador=0;     //Cuenta cuantos ciclos sque an realizados en la permutacion
-    int *visitados=NULL;  //Reguistra los valores por los cuales ya se a pasado
-    visitados=(int*)malloc(sizeof(int)*tamano);
+    int *visitados=(int*)malloc(sizeof(int)*tamano);    //Reguistra los valores por los cuales ya se a pasado
     visitados[0]=posicioni;
     int posicion=posicioni; //Guarda la posicion a la que debe ir
 
@@ -72,7 +70,7 @@ int main(){
     }
 
     //Busqueda de la permutacion mas larga
-    float permularga=-INFINITY;   //Se asigna un valor lo mas negativo posible para que si o si sea menor a cualquier numero del arreglo
+    float permularga=-1;   //Se asigna un valor lo mas negativo posible para que si o si sea menor a cualquier numero del arreglo
     for(int i=0;i<N;i++){
         aux=permutacion(arreglo,N,i);
         if(aux>permularga){     //Comparacion entre la permutacion anterior y la actual, la 1ra vez si o si entra por el -INFINITY

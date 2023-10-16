@@ -39,11 +39,12 @@ int main(){
     char x1;    //Coordenada en el eje X en formato de letra
     int y;      //Coordenada en el eje y en forma numerica
     printf("Ingrese la coordenada (Ej: d4): ");
-    scanf(" %c%d",&x1,&y);  //Ingreso de la coordenada en notacion de ajedrez
-    while(y<=0 || y>8 || x1<'a' || x1>'h'){ //Validacion de que sea un coordenada valida
-        printf("\nValor fuea de rango[a,h][1,8]:  ");
-        scanf(" %c%d",&x1,&y);
+    while(scanf(" %c%d",&x1,&y)!=2 || y<=0 || y>8 || x1<'a' || x1>'h'){   //Ingreso de la coordenada en notacion de ajedrez
+        printf("\nError de entrada\nValor fuea de rango[a,h][1,8]:  \n\nIngrese la coordenada (Ej: d4): ");
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF) {}  // Limpio la  entrada para eliminar caracteres no válidos
     }
+
     int x=x1-'a';   //Transformacion de coordenada de letra a numerico
 
     char tablero[8][8]={    //Declaracion del tablero

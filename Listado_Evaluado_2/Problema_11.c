@@ -1,39 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void ingreso(char mensaje[],int *numero){    //Funcion como el getline que valida que solo ingresen numeros
-    int tamal=1;
-    char *string=NULL;
-    while (tamal==1){ 
-        int longitud=0;
-        int capacidad=0;
-        char caracter;
-        printf("%s",mensaje);
-        while((caracter=getchar())!='\n'){
-            if (longitud>=capacidad){
-                capacidad+=2;
-                string=(char*)realloc(string,sizeof(char)*capacidad);
-            }
-            (string)[longitud]=caracter;
-            (longitud)++;
-        }
-        if(string==NULL){
-            continue;
-        }
-        tamal=0;
-        for(int i=0;i<longitud;i++){
-            if((string)[i]<48 || (string)[i]>57){
-                tamal=1;
-                printf("Solo se aceptan numeros\n");
-                string=NULL;
-                break;
-            }
-        }
-    }
-    *numero=atoi(string);
-    free(string);
-}
-
 void diagonal(int n,int **matriz,int posicionx,int posiciony,int *contador){
     int x=posicionx;
     int y=posiciony;
@@ -49,10 +16,10 @@ int main(){
     //Declaracion e ingreso de n, que almacena el tamano del lado del cuadrado
     int n;
     //printf("Ingrese el tamano del tablero de NxN:   ");
-    scanf("%d",&n);
-    while(n<1 || n>100){    //Validacion de n
-        //printf("\nValor fuera de rango\nIngrese el tamano del tablero de NxN:   ");
-        scanf("%d",&n);
+    while(scanf("%d",&n)!=1 || n<1 || n>100){   //Ingreso de n y validacion
+        //printf("Error de entrada\n\nIntrodusca la cantidad de numeros que va a ingresar (debe ser mayor a 0):  ");
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF) {}  // Limpio la  entrada para eliminar caracteres no válidos
     }
 
     int **matriz=(int**)malloc(sizeof(int*)*n);

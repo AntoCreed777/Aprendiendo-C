@@ -1,38 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
-
-void ingreso(char mensaje[],int *numero){    //Funcion como el getline que valida que solo ingresen numeros
-    int tamal=1;
-    char *string=NULL;
-    while (tamal==1){ 
-        int longitud=0;
-        int capacidad=0;
-        char caracter;
-        printf("%s",mensaje);
-        while((caracter=getchar())!='\n'){
-            if (longitud>=capacidad){
-                capacidad+=2;
-                string=(char*)realloc(string,sizeof(char)*capacidad);
-            }
-            (string)[longitud]=caracter;
-            (longitud)++;
-        }
-        if(string==NULL){
-            continue;
-        }
-        tamal=0;
-        for(int i=0;i<longitud;i++){
-            if((string)[i]<48 || (string)[i]>57){
-                tamal=1;
-                printf("Solo se aceptan numeros\n");
-                string=NULL;
-                break;
-            }
-        }
-    }
-    *numero=atoi(string);
-    free(string);
-}
 
 int filas(int matriz[9][9],int fila){
     int visto[9];
@@ -83,9 +49,12 @@ int main(){
 
     for(int i=0;i<9;i++){
         for(int j=0;j<9;j++){
-            char mensaje[100];
-            sprintf(mensaje,"Ingrese el numero de la fila %d y la columna %d:    ",i+1,j+1);
-            ingreso(mensaje,&matriz[i][j]);
+            printf("Ingrese el numero de la fila %d y la columna %d:    ",i+1,j+1);
+            while(scanf("%d",&matriz[i][j])!=1 || matriz[i][j]<1 || matriz[i][j]>9){   //Ingreso del numero
+                printf("Error de entrada, debe ser un numero de este rango[1,9]\n\nIngrese el numero de la fila %d y la columna %d:    ",i+1,j+1);
+                int c;
+                while ((c = getchar()) != '\n' && c != EOF) {}  // Limpio la  entrada para eliminar caracteres no válidos
+            }
         }
         printf("\n");
     }
