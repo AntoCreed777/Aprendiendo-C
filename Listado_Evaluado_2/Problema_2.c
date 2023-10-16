@@ -11,13 +11,13 @@ int permutacion(int arreglo[],int tamano,int posicioni){    //Funcion que busca 
         posicion=arreglo[posicion]; //Se actualiza la posicion a la que debe ir
         for(int i=0;i<=contador;i++){   //Recorre los elementos de "visitados"
             if(posicion==visitados[i]){ //Pregunta si ya se paso por ahi
+                free(visitados);
                 return contador+1;  //Se devuelve la cantidad de ciclos realizados mas 1, ese 1 es por el valor inicial que al principio no se agrega
             }
         }
         contador++;
         visitados[contador]=posicion;   //Se agrega la posicion al arreglo de posiciones ya visitadas
     }
-    free(visitados);
 }
 
 int validacion(int cantidad,int aux,int arreglo[]){

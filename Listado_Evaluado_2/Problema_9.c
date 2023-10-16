@@ -25,7 +25,7 @@ int main(){
     char ingreso[20];   //Declaracion de la variable que guardara a las palabras que ingresen
     
     //Declaracion de la variable que guardara la concatenacion de las primeras m letras de las n palabras
-    char *resultado=(char*)malloc(sizeof(char)*n*m);
+    char *resultado=(char*)malloc(sizeof(char)*n*m+1);
 
     //Relleno con 0 para que no tenga valores aleatorios almacenados
     for(int i=0;i<m*n;i++){
@@ -38,6 +38,7 @@ int main(){
         scanf("%s",ingreso);
         strncat(resultado,ingreso,m);
     }
+    resultado[n]='\0';
 
     //Imprimo el resultado de inmediato
     printf("%s",resultado);
