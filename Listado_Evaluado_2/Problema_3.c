@@ -20,10 +20,10 @@ void imprime_bits(int x){   //Funcion que imprime los bits del numero ingresado 
 int main(){
     int n;  //Declaracion de variable que registrara el numero que ingrese el usuario
     
-    printf("Ingrese un numero negativo perteneciente a este rango [-2147483648,-1]: ");
+    printf("Ingrese un numero negativo perteneciente a este rango [-2147483648,-1]: "); //Mensaje guia para el usuario
     while(scanf("%d",&n)!=1 || n>=0){   //Ingreso del numero
-        printf("Error de entrada\n\nIngrese un numero negativo perteneciente a este rango [-2147483648,-1]: ");
-        int c;
+        printf("Error de entrada\n\nIngrese un numero negativo perteneciente a este rango [-2147483648,-1]: "); //Mensaje guia para el usuario
+        int c;                                          //Declaracion de caracter auxiliar
         while ((c = getchar()) != '\n' && c != EOF) {}  // Limpio la  entrada para eliminar caracteres no válidos
     }
 
