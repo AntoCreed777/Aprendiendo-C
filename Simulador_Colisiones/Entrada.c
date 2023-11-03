@@ -60,45 +60,52 @@ FILE* ingreso_archivo(){    //Se valida que se haya abierto bien el archivo y de
 }
 
 int** CSV(FILE *p,int *contador){
-    int **valores_particulas=(int**)malloc(sizeof(int*));
-    valores_particulas[0]=(int*)malloc(sizeof(int)*3);
-    char separador[]=";";
-    char buffer[CARACTERESMAXIMOS];     //Se guarda la linea actual
-    int i=0;                            //Guarda la cantidad ded datos por linea ingresados
+    int **valores_particulas=(int**)malloc(sizeof(int*));                       //Se crea el arreglo en donde se guardaran los datos
+    valores_particulas[0]=(int*)malloc(sizeof(int)*3);                          //Le agrego 3 columnas a esa fila creada
+    char separador[]=";";                                                       //Declaracion del criterio para separa el buffer
+    char buffer[CARACTERESMAXIMOS];                                             //Se guarda la linea actual
+    int datos_por_particula=0;                                                  //Guarda la cantidad ded datos por linea ingresados
 
     while (fgets(buffer, CARACTERESMAXIMOS, p)){    // Leemos la linea actual y la dejamos copiada en buffer//Mientras no termine el archivo se seguira en el bucle
-        char *token = strtok(buffer, separador);
+        char *token = strtok(buffer, separador);    //Extraigo el string separado por ";"
+
+        //Comparo que el token no sea un salto de linea, evitando su asignacion al array, para que strcmp funcione, antes valido que token no sea NULL
         if(token!=NULL){
             while(strcmp(token,"\n")==0){
                 token = strtok(NULL, separador);
-                if(token==NULL){break;}
+                if(token==NULL){break;} //Si por a b c toca que token es NULL, salgo del while, porque no funciona el ctrcmp del while con token=NULL
             }
         }
 
-        while(token != NULL) {
-            valores_particulas[*contador][i]=atoi(token);
-            token = strtok(NULL, separador);
+        while(token != NULL) {                                                  //Mentras token sea distinto de NULL, permanesco en el Ciclo
+            valores_particulas[*contador][datos_por_particula]=atoi(token);     //Asigno el token como entero al array
+            token = strtok(NULL, separador);                                    //Obtengo el siguiente token
+            
+            //Comparo que el token no sea un salto de linea, evitando su asignacion al array, para que strcmp funcione, antes valido que token no sea NULL
             if(token!=NULL){
                 while(strcmp(token,"\n")==0){
                     token = strtok(NULL, separador);
                     if(token==NULL){break;}
                 }
             }
-            i++;
-            if(i==3){
-                i=0;
-                (*contador)++;
+
+            datos_por_particula++;                                                              //Aumento el contador de datos por particula
+            if(datos_por_particula==3){                                                         //Si ya se registraron 3 datos para una particula
+                datos_por_particula=0;                                                          //Reinicio el contardor
+                (*contador)++;                                                                  //Aumento el contador de particulas
                 valores_particulas=realloc(valores_particulas,sizeof(int*)*((*contador)+1));    //Le agrego otra fila al arreglo
-                valores_particulas[*contador]=(int*)malloc(sizeof(int*)*3);
+                valores_particulas[*contador]=(int*)malloc(sizeof(int*)*3);                     //A la fila agregada le agrego 3 columnas
             }
         }
     }
-    return  valores_particulas;
+    return  valores_particulas;     //Retorno el arreglo con los datos de cada particula
 }
 
 int** BINARIO(FILE *p,int *contador){
+    int **valores_particulas=(int**)malloc(sizeof(int*));
+    valores_particulas[0]=(int*)malloc(sizeof(int)*3);
 
-    return  NULL;
+    return  valores_particulas;
 }
 
 int** TEXTO(FILE *p,int *contador){
