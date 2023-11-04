@@ -1,1 +1,1 @@
-thola (100,5), chao (5,20)
+tEl primer objeto fue encontrado en la coordenada (100,25), mientras que otros dos fueron hallados en los puntos (55,55) y (0,78). Un cuarto objeto fue avistado en la coordenada invalida (0,1000)

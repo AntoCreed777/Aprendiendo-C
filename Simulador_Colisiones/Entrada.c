@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <time.h>
 
 #define BOLD "\e[1m"
 #define WHITE "\e[7m"
@@ -10,7 +11,7 @@
 #define NORMAL "\e[0m"
 
 #define CARACTERESMAXIMOS 100
-#define direccion_nula 111111
+#define modulo_random 2000
 
 char* ingreso_string(){                                     //Getline casero
     printf("%sIngrese la direccion de su archivo: %s\n",BOLD,NORMAL);
@@ -163,26 +164,47 @@ int** BINARIO(FILE *p,int *contador){                       //Funcion que recive
     return  valores_particulas;     //Se retorna el array con los datos de las particulas
 }
 
+int** extrae_coordenada_texto(int **valores_particulas,char* token1,int *contador){
+    int datos_por_particula=0;                                                                      //Guarda la cantidad ded datos por linea ingresados
+    char *token2 = strtok(token1,"(");                                                              //Extraigo el string separado por "(" a la izquierda
+    token2 = strtok(NULL, "(");                                                                     //Extraigo el string separado por "(" a la derecha
+    char *token3 = strtok(token2, ",");                                                             //Extraigo el string separado por "," a la izquierda, que seria la x
+    if(token3!=NULL && isdigit(token3[0])){
+        valores_particulas[*contador][datos_por_particula]=atoi(token3);
+        datos_por_particula++;
+    }                                                                                               //Lo guardo si es que es un numero
+    token3 = strtok(NULL, ",");                                                                     //Extraigo el string separado por "," a la derecha, que seria la y
+    if(token3!=NULL && isdigit(token3[0])){
+        valores_particulas[*contador][datos_por_particula]=atoi(token3);
+        datos_por_particula++;
+    }                                                                                               //Lo guardo    si es que es un numero
+
+    if(datos_por_particula==2){
+        valores_particulas[*contador][datos_por_particula]=rand()%modulo_random;                    //Si ya se guardaron las coordenadas. como no hay direccion lo asigno de forma random
+        datos_por_particula=0;                                                                      //Reinicio el contador de datos por particula
+        (*contador)++;
+        valores_particulas = (int**)realloc(valores_particulas, sizeof(int*) * (*contador+1));      // Se agrega otra fila
+        valores_particulas[*contador] = (int*)malloc(sizeof(int) * 3);                              //A esa fila se le agregan 3 columnas
+    }
+
+    return valores_particulas;                                                                                     
+}
+
 int** TEXTO(FILE *p,int *contador){
+    srand (time(NULL));                                                                         //Se inicializa la semilla del random
     int **valores_particulas=(int**)malloc(sizeof(int*));   //Se crea el arreglo en donde se guardaran los datos
     valores_particulas[0]=(int*)malloc(sizeof(int)*3);      //Le agrego 3 columnas a esa fila creada
 
     char buffer[CARACTERESMAXIMOS];                                             //Se guarda la linea actual
-    int datos_por_particula=0;                                                  //Guarda la cantidad ded datos por linea ingresados
-    char separador_inicial[]="(";                                               //Declaracion del criterio para separa el buffer por la izquierda
-    char separador_medio[]=",";                                                 //Declaracion del criterio para separa el buffer  por la derecha
-    char separador_final[]=")";                                                 //Declaracion del criterio para separa el buffer por la derecha final
     
     while (fgets(buffer, CARACTERESMAXIMOS, p)){    // Leemos la linea actual y la dejamos copiada en buffer//Mientras no termine el archivo se seguira en el bucle
-        char *token1;
-        while((token1 = strtok(buffer, separador_final))!=NULL){ //Extraigo el string separado por ")"
-            char *token2 = strtok(token1, separador_inicial);       //Extraigo el string separado por "(" a la izquierda
-            token2 = strtok(NULL, separador_inicial);               //Extraigo el string separado por "(" a la derecha
-                char *token3 = strtok(token2, separador_medio);     //Extraigo el string separado por "," a la izquierda, que seria la x
-                if(isdigit(token3)){valores_particulas[*contador][datos_por_particula]=atoi(token3);datos_por_particula++;}   //Lo guardo si es que es un numero
-                token3 = strtok(NULL, separador_medio);             //Extraigo el string separado por "," a la derecha, que seria la y
-                if(isdigit(token3)){valores_particulas[*contador][datos_por_particula]=atoi(token3);datos_por_particula++;}//Lo guardo    si es que es un numero
-                if(datos_por_particula==2){valores_particulas[*contador][datos_por_particula]=direccion_nula;datos_por_particula=0;(*contador)++;}  //Si ya se guardaron las coordenadas. como no hay direccion lo asigno como nulo
+        char *token1 = strtok(buffer, ")");
+        char *auxiliar = strtok(NULL, "");
+        while(token1!=NULL && token1 && "\n"){
+            valores_particulas=extrae_coordenada_texto(valores_particulas,token1,contador);
+            token1 = strtok(auxiliar, ")");
+            char *auxiliar2 = strtok(NULL, "");
+            auxiliar=auxiliar2;
         }
     }
     return  valores_particulas;
