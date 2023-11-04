@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 #define BOLD "\e[1m"
 #define WHITE "\e[7m"
@@ -9,8 +10,10 @@
 #define NORMAL "\e[0m"
 
 #define CARACTERESMAXIMOS 100
+#define direccion_nula 111111
 
 char* ingreso_string(){                                     //Getline casero
+    printf("%sIngrese la direccion de su archivo: %s\n",BOLD,NORMAL);
     int capacidad=10;                                       //Capacidad del string
     int longitud=0;                                         //Longitud actual del string
     char *string=(char*)malloc(sizeof(char)*capacidad);     //Dimencionamiento del String inicial
@@ -101,16 +104,88 @@ int** CSV(FILE *p,int *contador){
     return  valores_particulas;     //Retorno el arreglo con los datos de cada particula
 }
 
-int** BINARIO(FILE *p,int *contador){
-    int **valores_particulas=(int**)malloc(sizeof(int*));
-    valores_particulas[0]=(int*)malloc(sizeof(int)*3);
+int** BINARIO(FILE *p,int *contador){                       //Funcion que recive un archivo en binario y devuelve un array con los datos que almacena el archivo
+    int **valores_particulas=(int**)malloc(sizeof(int*));   //Se crea el arreglo en donde se guardaran los datos
+    valores_particulas[0]=(int*)malloc(sizeof(int)*3);      //Le agrego 3 columnas a esa fila creada
 
-    return  valores_particulas;
+    int datos_por_particula=0;                              //Guarda la cantidad de datos por linea ingresados
+    int cantidad_caracteres=0;                              //Guarda la cantidad de caracteres registrados por particula
+    char c;
+    int dato=0;                                             //Donde se guardara el dato
+
+    while((c=fgetc(p))!=EOF){                               //Mientras no se acabe se sigen registrando los caracteres
+        int aux=(int)c-'0';                                 //Conversion a entero
+        aux=aux<<(31-cantidad_caracteres);                  //Desplazamiento a la ubicacion en el entero final
+        dato+=aux;                                          //Se agrega al entero final
+        cantidad_caracteres++;                              //Se aumenta el contador de caracteres vistos en este dato
+        if(cantidad_caracteres==32){                        //Si se vieron 32, que es la cantidad de bits de un entero se ingresa
+            cantidad_caracteres=0;                          //Se reinicia el contador
+            valores_particulas[*contador][datos_por_particula]=dato;    //Se asigna el dato al array
+            datos_por_particula++;                                      //Se aumenta el contador de datos vistos por particula
+            dato=0;                                                     //Se reinicia la variable que almacena el dato
+            if(datos_por_particula==3){                                 //Si se completa la cantidad de datos por particulas(3) se ingresa
+                (*contador)++;                                          //Se aumenta el contador de particulas
+                valores_particulas = (int**)realloc(valores_particulas, sizeof(int*) * (*contador+1));  // Se agrega otra fila
+                valores_particulas[*contador] = (int*)malloc(sizeof(int) * 3);                          //A esa fila se le agregan 3 columnas
+                datos_por_particula=0;                                                                  //Se reinicia el contador de datos por paricula
+            }
+        }
+    }
+
+    /*
+    unsigned char c;                                        //Se guarda los caracteres ingresados
+    int datos_por_particula=0;                              //Guarda la cantidad de datos por linea ingresados
+    int cantidad_caracteres=0;                              //Guarda la cantidad de caracteres registrados por particula
+    int dato=0;                                             //Donde se guardara el dato
+
+    while (tamano_archivo!=(*contador)*3+cantidad_caracteres){      //Leemos el caracter actual
+        c=fgetc(p);
+        for(int i=7;i>=0;i--){
+            int aux=c;              //Auxiliar para no perder el valor original del caracter "c"
+            dato+=((aux >> i) & 1)<<(8*(4-cantidad_caracteres));
+        }
+
+        cantidad_caracteres++;
+        if(cantidad_caracteres==4){
+            valores_particulas[*contador][datos_por_particula]=dato;
+            dato=0;
+            cantidad_caracteres=0;
+            datos_por_particula++;
+            if(datos_por_particula==3){
+                (*contador)++;
+                valores_particulas = (int**)realloc(valores_particulas, sizeof(int*) * (*contador+1)); // Se agrega otra fila
+                valores_particulas[*contador] = (int*)malloc(sizeof(int) * 3);
+                datos_por_particula=0;
+            }
+        }
+    }
+    */
+    return  valores_particulas;     //Se retorna el array con los datos de las particulas
 }
 
 int** TEXTO(FILE *p,int *contador){
+    int **valores_particulas=(int**)malloc(sizeof(int*));   //Se crea el arreglo en donde se guardaran los datos
+    valores_particulas[0]=(int*)malloc(sizeof(int)*3);      //Le agrego 3 columnas a esa fila creada
 
-    return  NULL;
+    char buffer[CARACTERESMAXIMOS];                                             //Se guarda la linea actual
+    int datos_por_particula=0;                                                  //Guarda la cantidad ded datos por linea ingresados
+    char separador_inicial[]="(";                                               //Declaracion del criterio para separa el buffer por la izquierda
+    char separador_medio[]=",";                                                 //Declaracion del criterio para separa el buffer  por la derecha
+    char separador_final[]=")";                                                 //Declaracion del criterio para separa el buffer por la derecha final
+    
+    while (fgets(buffer, CARACTERESMAXIMOS, p)){    // Leemos la linea actual y la dejamos copiada en buffer//Mientras no termine el archivo se seguira en el bucle
+        char *token1;
+        while((token1 = strtok(buffer, separador_final))!=NULL){ //Extraigo el string separado por ")"
+            char *token2 = strtok(token1, separador_inicial);       //Extraigo el string separado por "(" a la izquierda
+            token2 = strtok(NULL, separador_inicial);               //Extraigo el string separado por "(" a la derecha
+                char *token3 = strtok(token2, separador_medio);     //Extraigo el string separado por "," a la izquierda, que seria la x
+                if(isdigit(token3)){valores_particulas[*contador][datos_por_particula]=atoi(token3);datos_por_particula++;}   //Lo guardo si es que es un numero
+                token3 = strtok(NULL, separador_medio);             //Extraigo el string separado por "," a la derecha, que seria la y
+                if(isdigit(token3)){valores_particulas[*contador][datos_por_particula]=atoi(token3);datos_por_particula++;}//Lo guardo    si es que es un numero
+                if(datos_por_particula==2){valores_particulas[*contador][datos_por_particula]=direccion_nula;datos_por_particula=0;(*contador)++;}  //Si ya se guardaron las coordenadas. como no hay direccion lo asigno como nulo
+        }
+    }
+    return  valores_particulas;
 }
 
 int main(){
@@ -154,7 +229,7 @@ int main(){
 
     for(int i=0;i<cantidad_particulas;i++){
         for(int j=0;j<3;j++){
-            printf("%s%s%d%s\t",BOLD,BLUE,valores_particulas[i][j],NORMAL);
+            printf("%s%s%u%s\t",BOLD,BLUE,(unsigned int)valores_particulas[i][j],NORMAL);
         }
         printf("\n");
     }
