@@ -52,11 +52,11 @@ FILE* ingreso_archivo(){    //Se valida que se haya abierto bien el archivo y de
             if (p != NULL) {                    //Se valida que se haya podido habrir el archivo
                 return p;
             }
-            else{
+            else{                               //Si no se pudo abrir se imprime un mensaje para el usuario
                 printf("%s%sError al abrir el archivo.%s\n\n",BOLD,WHITE,NORMAL);
             }
         }
-        else {
+        else {                                  //Si esta vacio la entrada del nombre imprime un mensaje para el usuario
             printf("%s%sError: no se ingresó el nombre del archivo.%s\n\n",BOLD,WHITE,NORMAL);
         }
     }
@@ -177,13 +177,13 @@ int** extrae_coordenada_texto(int **valores_particulas,char* token1,int *contado
     if(token3!=NULL && isdigit(token3[0]) && token4!=NULL && isdigit(token4[0])){
         valores_particulas = (int**)realloc(valores_particulas, sizeof(int*) * (*contador+1));      // Se agrega otra fila
         valores_particulas[*contador] = (int*)malloc(sizeof(int) * 3);                              //A esa fila se le agregan 3 columnas
-        valores_particulas[*contador][datos_por_particula]=atoi(token3);
+        valores_particulas[*contador][datos_por_particula]=atoi(token3);                            //Guardo el dato de la x
         datos_por_particula++;
-        valores_particulas[*contador][datos_por_particula]=atoi(token4);
+        valores_particulas[*contador][datos_por_particula]=atoi(token4);                            //Guardo el dato de la y
         datos_por_particula++;
 
-        valores_particulas[*contador][datos_por_particula]=rand()%modulo_random;                    //Si ya se guardaron las coordenadas. como no hay direccion lo asigno de forma random
-        (*contador)++;
+        valores_particulas[*contador][datos_por_particula]=rand()%modulo_random;                    //como no hay direccion lo asigno de forma random
+        (*contador)++;                                                                              //Aumento el contador de particulas
     }
 
     return valores_particulas;                                                                                     
@@ -196,13 +196,13 @@ int** TEXTO(FILE *p,int *contador){
     char buffer[CARACTERESMAXIMOS];                                             //Se guarda la linea actual
     
     while (fgets(buffer, CARACTERESMAXIMOS, p)){    // Leemos la linea actual y la dejamos copiada en buffer//Mientras no termine el archivo se seguira en el bucle
-        char *token1 = strtok(buffer, ")");
-        char *auxiliar = strtok(NULL, "");
-        while(token1!=NULL && token1 && "\n"){
-            valores_particulas=extrae_coordenada_texto(valores_particulas,token1,contador);
-            token1 = strtok(auxiliar, ")");
-            char *auxiliar2 = strtok(NULL, "");
-            auxiliar=auxiliar2;
+        char *token1 = strtok(buffer, ")");                 //Extraigo la parte con el "posible" dato
+        char *token_restante = strtok(NULL, "");            //Mantengo guardado el resto del buffer
+        while(token1!=NULL && token1 && "\n"){              //Si no esta vacio ni es un salto de linea se extrae las coordenadas
+            valores_particulas=extrae_coordenada_texto(valores_particulas,token1,contador);     //Extraigo las particulas generando el array dentro de la funcion
+            token1 = strtok(token_restante, ")");           //Extraigo otro "posible" dato de lo que quedaba del anterior token
+            char *auxiliar2 = strtok(NULL, "");             //Guardo lo que queda de  forma temporal
+            token_restante=auxiliar2;                       //Lo guardo en la variable que guarda lo que falta
         }
     }
     return  valores_particulas;
@@ -230,9 +230,9 @@ int main(){
     
 
     //Recopilacion de datos segun el tipo de entrada
-    int **valores_particulas=NULL;
-    int cantidad_particulas=0;                                         //Guarda la cantidad de particulas ingresados
-    switch (tipo_entrada){
+    int **valores_particulas=NULL;                                      //Array en donde se guardaran los datos
+    int cantidad_particulas=0;                                          //Guarda la cantidad de particulas ingresados
+    switch (tipo_entrada){                                              //Llamo la funcion para extraer los datos segun que tipo de archivo entrante es
         case 'c': //CSV
             valores_particulas=CSV(entrada,&cantidad_particulas);
             break;
@@ -247,6 +247,7 @@ int main(){
             return 1;
     }
 
+    //For que imprime en terminal el array con los datos ingresados
     for(int i=0;i<cantidad_particulas;i++){
         for(int j=0;j<3;j++){
             printf("%s%s%u%s\t",BOLD,BLUE,(unsigned int)valores_particulas[i][j],NORMAL);
