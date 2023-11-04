@@ -82,6 +82,11 @@ int** CSV(FILE *p,int *contador){
         }
 
         while(token != NULL) {                                                  //Mentras token sea distinto de NULL, permanesco en el Ciclo
+            if(datos_por_particula==3){                                                         //Si ya se registraron 3 datos para una particula
+                datos_por_particula=0;                                                          //Reinicio el contardor
+                valores_particulas=realloc(valores_particulas,sizeof(int*)*((*contador)+1));    //Le agrego otra fila al arreglo
+                valores_particulas[*contador]=(int*)malloc(sizeof(int*)*3);                     //A la fila agregada le agrego 3 columnas
+            }
             valores_particulas[*contador][datos_por_particula]=atoi(token);     //Asigno el token como entero al array
             token = strtok(NULL, separador);                                    //Obtengo el siguiente token
             
@@ -94,11 +99,8 @@ int** CSV(FILE *p,int *contador){
             }
 
             datos_por_particula++;                                                              //Aumento el contador de datos por particula
-            if(datos_por_particula==3){                                                         //Si ya se registraron 3 datos para una particula
-                datos_por_particula=0;                                                          //Reinicio el contardor
+            if(datos_por_particula==3){
                 (*contador)++;                                                                  //Aumento el contador de particulas
-                valores_particulas=realloc(valores_particulas,sizeof(int*)*((*contador)+1));    //Le agrego otra fila al arreglo
-                valores_particulas[*contador]=(int*)malloc(sizeof(int*)*3);                     //A la fila agregada le agrego 3 columnas
             }
         }
     }
@@ -115,6 +117,11 @@ int** BINARIO(FILE *p,int *contador){                       //Funcion que recive
     int dato=0;                                             //Donde se guardara el dato
 
     while((c=fgetc(p))!=EOF){                               //Mientras no se acabe se sigen registrando los caracteres
+        if(datos_por_particula==3){                                 //Si se completa la cantidad de datos por particulas(3) se ingresa
+            valores_particulas = (int**)realloc(valores_particulas, sizeof(int*) * (*contador+1));  // Se agrega otra fila
+            valores_particulas[*contador] = (int*)malloc(sizeof(int) * 3);                          //A esa fila se le agregan 3 columnas
+            datos_por_particula=0;                                                                  //Se reinicia el contador de datos por paricula
+        }
         int aux=(int)c-'0';                                 //Conversion a entero
         aux=aux<<(31-cantidad_caracteres);                  //Desplazamiento a la ubicacion en el entero final
         dato+=aux;                                          //Se agrega al entero final
@@ -126,9 +133,6 @@ int** BINARIO(FILE *p,int *contador){                       //Funcion que recive
             dato=0;                                                     //Se reinicia la variable que almacena el dato
             if(datos_por_particula==3){                                 //Si se completa la cantidad de datos por particulas(3) se ingresa
                 (*contador)++;                                          //Se aumenta el contador de particulas
-                valores_particulas = (int**)realloc(valores_particulas, sizeof(int*) * (*contador+1));  // Se agrega otra fila
-                valores_particulas[*contador] = (int*)malloc(sizeof(int) * 3);                          //A esa fila se le agregan 3 columnas
-                datos_por_particula=0;                                                                  //Se reinicia el contador de datos por paricula
             }
         }
     }
@@ -169,22 +173,17 @@ int** extrae_coordenada_texto(int **valores_particulas,char* token1,int *contado
     char *token2 = strtok(token1,"(");                                                              //Extraigo el string separado por "(" a la izquierda
     token2 = strtok(NULL, "(");                                                                     //Extraigo el string separado por "(" a la derecha
     char *token3 = strtok(token2, ",");                                                             //Extraigo el string separado por "," a la izquierda, que seria la x
-    if(token3!=NULL && isdigit(token3[0])){
-        valores_particulas[*contador][datos_por_particula]=atoi(token3);
-        datos_por_particula++;
-    }                                                                                               //Lo guardo si es que es un numero
-    token3 = strtok(NULL, ",");                                                                     //Extraigo el string separado por "," a la derecha, que seria la y
-    if(token3!=NULL && isdigit(token3[0])){
-        valores_particulas[*contador][datos_por_particula]=atoi(token3);
-        datos_por_particula++;
-    }                                                                                               //Lo guardo    si es que es un numero
-
-    if(datos_por_particula==2){
-        valores_particulas[*contador][datos_por_particula]=rand()%modulo_random;                    //Si ya se guardaron las coordenadas. como no hay direccion lo asigno de forma random
-        datos_por_particula=0;                                                                      //Reinicio el contador de datos por particula
-        (*contador)++;
+    char *token4 = strtok(NULL, ",");                                                               //Extraigo el string separado por "," a la derecha, que seria la y
+    if(token3!=NULL && isdigit(token3[0]) && token4!=NULL && isdigit(token4[0])){
         valores_particulas = (int**)realloc(valores_particulas, sizeof(int*) * (*contador+1));      // Se agrega otra fila
         valores_particulas[*contador] = (int*)malloc(sizeof(int) * 3);                              //A esa fila se le agregan 3 columnas
+        valores_particulas[*contador][datos_por_particula]=atoi(token3);
+        datos_por_particula++;
+        valores_particulas[*contador][datos_por_particula]=atoi(token4);
+        datos_por_particula++;
+
+        valores_particulas[*contador][datos_por_particula]=rand()%modulo_random;                    //Si ya se guardaron las coordenadas. como no hay direccion lo asigno de forma random
+        (*contador)++;
     }
 
     return valores_particulas;                                                                                     
@@ -192,8 +191,7 @@ int** extrae_coordenada_texto(int **valores_particulas,char* token1,int *contado
 
 int** TEXTO(FILE *p,int *contador){
     srand (time(NULL));                                                                         //Se inicializa la semilla del random
-    int **valores_particulas=(int**)malloc(sizeof(int*));   //Se crea el arreglo en donde se guardaran los datos
-    valores_particulas[0]=(int*)malloc(sizeof(int)*3);      //Le agrego 3 columnas a esa fila creada
+    int **valores_particulas=NULL;
 
     char buffer[CARACTERESMAXIMOS];                                             //Se guarda la linea actual
     
