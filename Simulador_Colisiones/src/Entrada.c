@@ -177,7 +177,22 @@ int** TEXTO(FILE *p,int *contador){
         char *token1 = strtok(buffer, ")");                 //Extraigo la parte con el "posible" dato
         char *token_restante = strtok(NULL, "");            //Mantengo guardado el resto del buffer
         while(token1!=NULL && token1 && "\n"){              //Si no esta vacio ni es un salto de linea se extrae las coordenadas
-            valores_particulas=extrae_coordenada_texto(valores_particulas,token1,contador);     //Extraigo las particulas generando el array dentro de la funcion
+            int datos_por_particula=0;                                                                      //Guarda la cantidad ded datos por linea ingresados
+            char *token2 = strtok(token1,"(");                                                              //Extraigo el string separado por "(" a la izquierda
+            token2 = strtok(NULL, "(");                                                                     //Extraigo el string separado por "(" a la derecha
+            char *token3 = strtok(token2, ",");                                                             //Extraigo el string separado por "," a la izquierda, que seria la x
+            char *token4 = strtok(NULL, ",");                                                               //Extraigo el string separado por "," a la derecha, que seria la y
+            if(token3!=NULL && isdigit(token3[0]) && token4!=NULL && isdigit(token4[0])){
+                valores_particulas = (int**)realloc(valores_particulas, sizeof(int*) * (*contador+1));      // Se agrega otra fila
+                valores_particulas[*contador] = (int*)malloc(sizeof(int) * 3);                              //A esa fila se le agregan 3 columnas
+                valores_particulas[*contador][datos_por_particula]=atoi(token3);                            //Guardo el dato de la x
+                datos_por_particula++;
+                valores_particulas[*contador][datos_por_particula]=atoi(token4);                            //Guardo el dato de la y
+                datos_por_particula++;
+
+                valores_particulas[*contador][datos_por_particula]=rand()%modulo_random;                    //como no hay direccion lo asigno de forma random
+                (*contador)++;                                                                              //Aumento el contador de particulas
+            }
             token1 = strtok(token_restante, ")");           //Extraigo otro "posible" dato de lo que quedaba del anterior token
             char *auxiliar2 = strtok(NULL, "");             //Guardo lo que queda de  forma temporal
             token_restante=auxiliar2;                       //Lo guardo en la variable que guarda lo que falta
