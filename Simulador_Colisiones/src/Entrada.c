@@ -63,48 +63,26 @@ FILE* ingreso_archivo(){    //Se valida que se haya abierto bien el archivo y de
     
 }
 
-int** CSV(FILE *p,int *contador){
-    int **valores_particulas=(int**)malloc(sizeof(int*));                       //Se crea el arreglo en donde se guardaran los datos
-    valores_particulas[0]=(int*)malloc(sizeof(int)*3);                          //Le agrego 3 columnas a esa fila creada
-    char separador[]=";";                                                       //Declaracion del criterio para separa el buffer
-    char buffer[CARACTERESMAXIMOS];                                             //Se guarda la linea actual
-    int datos_por_particula=0;                                                  //Guarda la cantidad ded datos por linea ingresados
+int** CSV(FILE *p,int *contador){       //Funcion que recibe los datos separados por ; y los guarda en un array
+    int **valores_particulas;                                                               //Se crea el arreglo en donde se guardaran los datos
+    int numero1,numero2,numero3;                                                            //Numeros Auxiliares
 
-    while (fgets(buffer, CARACTERESMAXIMOS, p)){    // Leemos la linea actual y la dejamos copiada en buffer//Mientras no termine el archivo se seguira en el bucle
-        char *token = strtok(buffer, separador);    //Extraigo el string separado por ";"
-
-        //Comparo que el token no sea un salto de linea, evitando su asignacion al array, para que strcmp funcione, antes valido que token no sea NULL
-        if(token!=NULL){
-            while(strcmp(token,"\n")==0){
-                token = strtok(NULL, separador);
-                if(token==NULL){break;} //Si por a b c toca que token es NULL, salgo del while, porque no funciona el ctrcmp del while con token=NULL
-            }
+    while(feof(p)!=true && fscanf(p,"%d;%d;%d;",&numero1,&numero2,&numero3)==3){            //Mientras no se acabe, extraere los datos de 3 en 3 separados por ;
+        if((*contador)==0){
+            valores_particulas=(int**)malloc(sizeof(int*));                                 //Le agrego la primera fila
         }
-
-        while(token != NULL) {                                                  //Mentras token sea distinto de NULL, permanesco en el Ciclo
-            if(datos_por_particula==3){                                                         //Si ya se registraron 3 datos para una particula
-                datos_por_particula=0;                                                          //Reinicio el contardor
-                valores_particulas=realloc(valores_particulas,sizeof(int*)*((*contador)+1));    //Le agrego otra fila al arreglo
-                valores_particulas[*contador]=(int*)malloc(sizeof(int*)*3);                     //A la fila agregada le agrego 3 columnas
-            }
-            valores_particulas[*contador][datos_por_particula]=atoi(token);     //Asigno el token como entero al array
-            token = strtok(NULL, separador);                                    //Obtengo el siguiente token
-            
-            //Comparo que el token no sea un salto de linea, evitando su asignacion al array, para que strcmp funcione, antes valido que token no sea NULL
-            if(token!=NULL){
-                while(strcmp(token,"\n")==0){
-                    token = strtok(NULL, separador);
-                    if(token==NULL){break;}
-                }
-            }
-
-            datos_por_particula++;                                                              //Aumento el contador de datos por particula
-            if(datos_por_particula==3){
-                (*contador)++;                                                                  //Aumento el contador de particulas
-            }
+        else{
+            valores_particulas=realloc(valores_particulas,sizeof(int*)*((*contador)+1));    //Le agrego otra fila al arreglo
         }
+        valores_particulas[*contador]=(int*)malloc(sizeof(int*)*3);                         //A la fila agregada le agrego 3 columnas
+
+        valores_particulas[*contador][0]=numero1;                                           //Asignacion de la coordenada X de forma definitiva
+        valores_particulas[*contador][1]=numero2;                                           //Asignacion de la coordenada Y de forma definitiva
+        valores_particulas[*contador][2]=numero3;                                           //Asignacion de la Direccion de forma definitiva
+        
+        (*contador)++;                                                                      //Aumento el contador de particulas en uno
     }
-    return  valores_particulas;     //Retorno el arreglo con los datos de cada particula
+    return  valores_particulas;                                                             //Retorno el arreglo con los datos de cada particula
 }
 
 int** BINARIO(FILE *p,int *contador){                       //Funcion que recive un archivo en binario y devuelve un array con los datos que almacena el archivo
