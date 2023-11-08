@@ -114,35 +114,6 @@ int** BINARIO(FILE *p,int *contador){                       //Funcion que recive
             }
         }
     }
-
-    /*
-    unsigned char c;                                        //Se guarda los caracteres ingresados
-    int datos_por_particula=0;                              //Guarda la cantidad de datos por linea ingresados
-    int cantidad_caracteres=0;                              //Guarda la cantidad de caracteres registrados por particula
-    int dato=0;                                             //Donde se guardara el dato
-
-    while (tamano_archivo!=(*contador)*3+cantidad_caracteres){      //Leemos el caracter actual
-        c=fgetc(p);
-        for(int i=7;i>=0;i--){
-            int aux=c;              //Auxiliar para no perder el valor original del caracter "c"
-            dato+=((aux >> i) & 1)<<(8*(4-cantidad_caracteres));
-        }
-
-        cantidad_caracteres++;
-        if(cantidad_caracteres==4){
-            valores_particulas[*contador][datos_por_particula]=dato;
-            dato=0;
-            cantidad_caracteres=0;
-            datos_por_particula++;
-            if(datos_por_particula==3){
-                (*contador)++;
-                valores_particulas = (int**)realloc(valores_particulas, sizeof(int*) * (*contador+1)); // Se agrega otra fila
-                valores_particulas[*contador] = (int*)malloc(sizeof(int) * 3);
-                datos_por_particula=0;
-            }
-        }
-    }
-    */
     return  valores_particulas;     //Se retorna el array con los datos de las particulas
 }
 
