@@ -10,7 +10,7 @@
 #define BLUE "\e[44m"
 #define NORMAL "\e[0m"
 
-#define CARACTERESMAXIMOS 100
+#define CARACTERESMAXIMOS 100000
 #define modulo_random 2000
 
 char* ingreso_string(){                                     //Getline casero
@@ -72,7 +72,7 @@ int** CSV(FILE *p,int *contador){       //Funcion que recibe los datos separados
             valores_particulas=(int**)malloc(sizeof(int*));                                 //Le agrego la primera fila
         }
         else{
-            valores_particulas=realloc(valores_particulas,sizeof(int*)*((*contador)+1));    //Le agrego otra fila al arreglo
+            valores_particulas=realloc(valores_particulas,sizeof(int)*((*contador)+1));    //Le agrego otra fila al arreglo
         }
         valores_particulas[*contador]=(int*)malloc(sizeof(int*)*3);                         //A la fila agregada le agrego 3 columnas
 
@@ -146,56 +146,32 @@ int** BINARIO(FILE *p,int *contador){                       //Funcion que recive
     return  valores_particulas;     //Se retorna el array con los datos de las particulas
 }
 
-int** extrae_coordenada_texto(int **valores_particulas,char* token1,int *contador){
-    int datos_por_particula=0;                                                                      //Guarda la cantidad ded datos por linea ingresados
-    char *token2 = strtok(token1,"(");                                                              //Extraigo el string separado por "(" a la izquierda
-    token2 = strtok(NULL, "(");                                                                     //Extraigo el string separado por "(" a la derecha
-    char *token3 = strtok(token2, ",");                                                             //Extraigo el string separado por "," a la izquierda, que seria la x
-    char *token4 = strtok(NULL, ",");                                                               //Extraigo el string separado por "," a la derecha, que seria la y
-    if(token3!=NULL && isdigit(token3[0]) && token4!=NULL && isdigit(token4[0])){
-        valores_particulas = (int**)realloc(valores_particulas, sizeof(int*) * (*contador+1));      // Se agrega otra fila
-        valores_particulas[*contador] = (int*)malloc(sizeof(int) * 3);                              //A esa fila se le agregan 3 columnas
-        valores_particulas[*contador][datos_por_particula]=atoi(token3);                            //Guardo el dato de la x
-        datos_por_particula++;
-        valores_particulas[*contador][datos_por_particula]=atoi(token4);                            //Guardo el dato de la y
-        datos_por_particula++;
-
-        valores_particulas[*contador][datos_por_particula]=rand()%modulo_random;                    //como no hay direccion lo asigno de forma random
-        (*contador)++;                                                                              //Aumento el contador de particulas
-    }
-
-    return valores_particulas;                                                                                     
-}
-
 int** TEXTO(FILE *p,int *contador){
     srand (time(NULL));                                                                         //Se inicializa la semilla del random
     int **valores_particulas=NULL;
 
     char buffer[CARACTERESMAXIMOS];                                             //Se guarda la linea actual
-    
+    int x,y;
     while (fgets(buffer, CARACTERESMAXIMOS, p)){    // Leemos la linea actual y la dejamos copiada en buffer//Mientras no termine el archivo se seguira en el bucle
-        char *token1 = strtok(buffer, ")");                 //Extraigo la parte con el "posible" dato
-        char *token_restante = strtok(NULL, "");            //Mantengo guardado el resto del buffer
-        while(token1!=NULL && token1 && "\n"){              //Si no esta vacio ni es un salto de linea se extrae las coordenadas
-            int datos_por_particula=0;                                                                      //Guarda la cantidad ded datos por linea ingresados
-            char *token2 = strtok(token1,"(");                                                              //Extraigo el string separado por "(" a la izquierda
-            token2 = strtok(NULL, "(");                                                                     //Extraigo el string separado por "(" a la derecha
-            char *token3 = strtok(token2, ",");                                                             //Extraigo el string separado por "," a la izquierda, que seria la x
-            char *token4 = strtok(NULL, ",");                                                               //Extraigo el string separado por "," a la derecha, que seria la y
-            if(token3!=NULL && isdigit(token3[0]) && token4!=NULL && isdigit(token4[0])){
-                valores_particulas = (int**)realloc(valores_particulas, sizeof(int*) * (*contador+1));      // Se agrega otra fila
-                valores_particulas[*contador] = (int*)malloc(sizeof(int) * 3);                              //A esa fila se le agregan 3 columnas
-                valores_particulas[*contador][datos_por_particula]=atoi(token3);                            //Guardo el dato de la x
-                datos_por_particula++;
-                valores_particulas[*contador][datos_por_particula]=atoi(token4);                            //Guardo el dato de la y
-                datos_por_particula++;
+        char *ptr = buffer;
+        while ((ptr = strstr(ptr, "(")) != NULL) {
+            if (sscanf(ptr, "(%d,%d)", &x, &y) == 2) {
+                if((*contador)==0){
+                    valores_particulas=(int**)malloc(sizeof(int*));                                 //Le agrego la primera fila
+                }
+                else{
+                    valores_particulas=realloc(valores_particulas,sizeof(int)*((*contador)+1));     //Le agrego otra fila al arreglo
+                }
+                valores_particulas[*contador]=(int*)malloc(sizeof(int*)*3);                         //A la fila agregada le agrego 3 columnas
 
-                valores_particulas[*contador][datos_por_particula]=rand()%modulo_random;                    //como no hay direccion lo asigno de forma random
-                (*contador)++;                                                                              //Aumento el contador de particulas
+                valores_particulas[*contador][0]=x;                                                 //Asignacion de la coordenada X de forma definitiva
+                valores_particulas[*contador][1]=y;                                                 //Asignacion de la coordenada Y de forma definitiva
+                valores_particulas[*contador][2]=rand()%modulo_random;                              //Como no hay direccion lo asigno de forma random
+                
+                (*contador)++;                                                                      //Aumento el contador de particulas en uno
+
             }
-            token1 = strtok(token_restante, ")");           //Extraigo otro "posible" dato de lo que quedaba del anterior token
-            char *auxiliar2 = strtok(NULL, "");             //Guardo lo que queda de  forma temporal
-            token_restante=auxiliar2;                       //Lo guardo en la variable que guarda lo que falta
+            ptr++;
         }
     }
     return  valores_particulas;
