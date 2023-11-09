@@ -64,21 +64,16 @@ FILE* ingreso_archivo(){    //Se valida que se haya abierto bien el archivo y de
 }
 
 int** CSV(FILE *p,int *contador){       //Funcion que recibe los datos separados por ; y los guarda en un array
-    int **valores_particulas;                                                               //Se crea el arreglo en donde se guardaran los datos
+    int **valores_particulas = NULL;                                                               //Se crea el arreglo en donde se guardaran los datos
     int numero1,numero2,numero3;                                                            //Numeros Auxiliares
 
     while(feof(p)!=true && fscanf(p,"%d;%d;%d;",&numero1,&numero2,&numero3)==3){            //Mientras no se acabe, extraere los datos de 3 en 3 separados por ;
-        if((*contador)==0){
-            valores_particulas=(int**)malloc(sizeof(int*));                                 //Le agrego la primera fila
-        }
-        else{
-            valores_particulas=realloc(valores_particulas,sizeof(int*)*((*contador)+1));    //Le agrego otra fila al arreglo
-        }
-        valores_particulas[*contador]=(int*)malloc(sizeof(int*)*3);                         //A la fila agregada le agrego 3 columnas
+        valores_particulas=realloc(valores_particulas,sizeof(int*)*((*contador)+1));    //Le agrego otra fila al arreglo
+        valores_particulas[*contador]=(int*)malloc(sizeof(int)*3);                         //A la fila agregada le agrego 3 columnas
 
         valores_particulas[*contador][0]=numero1;                                           //Asignacion de la coordenada X de forma definitiva
         valores_particulas[*contador][1]=numero2;                                           //Asignacion de la coordenada Y de forma definitiva
-        valores_particulas[*contador][2]=numero3 % modulo_direccion;                        //Asignacion de la Direccion de forma definitiva
+        valores_particulas[*contador][2]=numero3 % modulo_direccion;                                           //Asignacion de la Direccion de forma definitiva
         
         (*contador)++;                                                                      //Aumento el contador de particulas en uno
     }
