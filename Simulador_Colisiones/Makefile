@@ -1,9 +1,9 @@
 ifeq ($(OS),Windows_NT)
 	CFLAGS = -Iinclude -Llib -Wall
-	LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -g
+	LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lm -g
 else
 	CFLAGS = -Iinclude -Llib
-	LDFLAGS = -lSDL2main -lSDL2
+	LDFLAGS = -lSDL2main -lSDL2 -lm
 endif
 
 ENTRADA : src/Entrada.c
