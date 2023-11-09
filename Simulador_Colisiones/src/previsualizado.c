@@ -1,3 +1,4 @@
+#include <SDL2/SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,6 +13,8 @@
 
 #define CARACTERESMAXIMOS 100000
 #define modulo_direccion 8
+#define DELAY 5
+
 
 char* ingreso_string(){                                     //Getline casero
     printf("%sIngrese la direccion de su archivo: %s\n",BOLD,NORMAL);
@@ -64,21 +67,16 @@ FILE* ingreso_archivo(){    //Se valida que se haya abierto bien el archivo y de
 }
 
 int** CSV(FILE *p,int *contador){       //Funcion que recibe los datos separados por ; y los guarda en un array
-    int **valores_particulas;                                                               //Se crea el arreglo en donde se guardaran los datos
+    int **valores_particulas = NULL;                                                               //Se crea el arreglo en donde se guardaran los datos
     int numero1,numero2,numero3;                                                            //Numeros Auxiliares
 
     while(feof(p)!=true && fscanf(p,"%d;%d;%d;",&numero1,&numero2,&numero3)==3){            //Mientras no se acabe, extraere los datos de 3 en 3 separados por ;
-        if((*contador)==0){
-            valores_particulas=(int**)malloc(sizeof(int*));                                 //Le agrego la primera fila
-        }
-        else{
-            valores_particulas=realloc(valores_particulas,sizeof(int*)*((*contador)+1));    //Le agrego otra fila al arreglo
-        }
-        valores_particulas[*contador]=(int*)malloc(sizeof(int*)*3);                         //A la fila agregada le agrego 3 columnas
+        valores_particulas=realloc(valores_particulas,sizeof(int*)*((*contador)+1));    //Le agrego otra fila al arreglo
+        valores_particulas[*contador]=(int*)malloc(sizeof(int)*3);                         //A la fila agregada le agrego 3 columnas
 
         valores_particulas[*contador][0]=numero1;                                           //Asignacion de la coordenada X de forma definitiva
         valores_particulas[*contador][1]=numero2;                                           //Asignacion de la coordenada Y de forma definitiva
-        valores_particulas[*contador][2]=numero3 % modulo_direccion;                        //Asignacion de la Direccion de forma definitiva
+        valores_particulas[*contador][2]=numero3 % modulo_direccion;                                           //Asignacion de la Direccion de forma definitiva
         
         (*contador)++;                                                                      //Aumento el contador de particulas en uno
     }
@@ -106,7 +104,7 @@ int** BINARIO(FILE *p,int *contador){                       //Funcion que recive
         cantidad_caracteres++;                              //Se aumenta el contador de caracteres vistos en este dato
         if(cantidad_caracteres==32){                        //Si se vieron 32, que es la cantidad de bits de un entero se ingresa
             cantidad_caracteres=0;                          //Se reinicia el contador
-            if(datos_por_particula == 3){                   //Al dato de la direccion le aplico el modulo para levarlo a valores dentro del rango
+            if(datos_por_particula == 3){
                 dato = dato % modulo_direccion;
             }
             valores_particulas[*contador][datos_por_particula]=dato;    //Se asigna el dato al array
@@ -150,6 +148,7 @@ int** TEXTO(FILE *p,int *contador){
     }
     return  valores_particulas;
 }
+
 
 int main(int argc,char *argv[]){
     /*
@@ -197,22 +196,164 @@ int main(int argc,char *argv[]){
             return 1;
     }
 
-    fclose(entrada);    //Cierro el arcivo porque ya no se va a usar mas
-
-    //For que imprime en terminal el array con los datos ingresados
-    for(int i=0;i<cantidad_particulas;i++){
-        for(int j=0;j<3;j++){
-            printf("%s%s%u%s\t",BOLD,BLUE,(unsigned int)valores_particulas[i][j],NORMAL);
-        }
-        printf("\n");
+    fclose(entrada);
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////// FIN LECTURA ///////////INICIO VISUALIZACION/////////// Y-O MOVIMIENTO ////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Inicializacion de SDL
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0){
+        SDL_Log("Incapaz de inicializar SDL: %s", SDL_GetError());
+        return 1;
     }
 
+    // Obtengo la maxima resolucion de la pantalla
+    SDL_DisplayMode DM;
+    SDL_GetDesktopDisplayMode(0, &DM);
+
+    //Creacion de la ventana
+    SDL_Window *ventana = SDL_CreateWindow("Desplegable",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,DM.w,DM.h,SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_FULLSCREEN);
+    if(ventana == NULL){
+        SDL_Log("Incapaz de crear la ventana: %s", SDL_GetError());
+        return 1;
+    }
+
+    SDL_Surface *screen_surface = SDL_GetWindowSurface(ventana);
+    int running = 1;
+    SDL_Event evento;
+
+    SDL_Rect rect;
+    rect.w = 20;
+    rect.h = 20;
+    SDL_Point mouse;
+
+    int cambio_color = 0;
+
+    while(running == 1){
+        while(SDL_PollEvent(&evento)){
+            if(evento.type == SDL_QUIT){
+                running = 0;
+            }
+            if(evento.type == SDL_KEYDOWN){
+                SDL_Keycode key = evento.key.keysym.sym;
+                if(key == SDLK_ESCAPE){
+                    running =0;
+                }
+            }
+            if(evento.type == SDL_MOUSEBUTTONDOWN){
+                mouse.x = evento.button.x;
+                mouse.y = evento.button.y;
+                SDL_Log("Hice CLICK en (%d,%d)",mouse.x,mouse.y);
+            }
+        }
+
+        //Impresion en la ventana
+        SDL_FillRect(screen_surface, NULL, SDL_MapRGB(screen_surface->format, 255 + cambio_color, 120 + cambio_color, 25 + cambio_color));
+        for(int i=0;i<cantidad_particulas;i++){
+            rect.x = valores_particulas[i][0];
+            rect.y = valores_particulas[i][1];
+            SDL_FillRect(screen_surface, &rect, SDL_MapRGB(screen_surface->format, 0 + cambio_color, 255 + cambio_color, 0 + cambio_color));
+        }
+        SDL_UpdateWindowSurface(ventana);
+
+        cambio_color++;
+        //Calculo de la siguiente posicion y actualizacion de valores particulas
+        for(int i=0;i<cantidad_particulas;i++){
+            //Colicion con algun borde de la ventana
+            if(valores_particulas[i][0] == 0){
+                if(valores_particulas[i][2] == 3){
+                    valores_particulas[i][2]= 1;
+                }
+                else if(valores_particulas[i][2] == 4){
+                    valores_particulas[i][2]= 0;
+                }
+                else if(valores_particulas[i][2] == 5){
+                    valores_particulas[i][2]= 7;
+                }
+            }
+            if(valores_particulas[i][0] == DM.w){
+                if(valores_particulas[i][2] == 7){
+                    valores_particulas[i][2]= 5;
+                }
+                else if(valores_particulas[i][2] == 0){
+                    valores_particulas[i][2]= 4;
+                }
+                else if(valores_particulas[i][2] == 1){
+                    valores_particulas[i][2]= 3;
+                }
+            }
+            if(valores_particulas[i][1] == 0){
+                if(valores_particulas[i][2] == 1){
+                    valores_particulas[i][2]= 7;
+                }
+                else if(valores_particulas[i][2] == 2){
+                    valores_particulas[i][2]= 6;
+                }
+                else if(valores_particulas[i][2] == 3){
+                    valores_particulas[i][2]= 5;
+                }
+            }
+            if(valores_particulas[i][1] == DM.h){
+                if(valores_particulas[i][2] == 7){
+                    valores_particulas[i][2]= 1;
+                }
+                else if(valores_particulas[i][2] == 6){
+                    valores_particulas[i][2]= 2;
+                }
+                else if(valores_particulas[i][2] == 5){
+                    valores_particulas[i][2]= 3;
+                }
+            }
+            
+            switch (valores_particulas[i][2])
+            {
+            case 0: //Derecha
+                valores_particulas[i][0]++ ;    //X
+                break;
+            case 1: //Derecha Arriba
+                valores_particulas[i][0]++ ;    //X
+                valores_particulas[i][1]-- ;    //Y
+                break;
+            case 2: //Arriba
+                valores_particulas[i][1]-- ;    //Y
+                break;
+            case 3: //Arriba Izquierda
+                valores_particulas[i][0]-- ;    //X
+                valores_particulas[i][1]-- ;    //Y
+                break;
+            case 4: //Izquierda
+                valores_particulas[i][0]-- ;    //X
+                break;
+            case 5: //Izquierda Abajo
+                valores_particulas[i][0]-- ;    //X
+                valores_particulas[i][1]++ ;    //Y
+                break;
+            case 6: //Abajo
+                valores_particulas[i][1]++ ;    //Y
+                break;
+            case 7: //Abajo Derevha
+                valores_particulas[i][0]++ ;    //X
+                valores_particulas[i][1]++ ;    //Y
+                break;
+            }
+            //Colicion con otra particula
+
+
+
+
+        }
+    
+        //SDL_Delay(DELAY);
+    }
 
     //Liberacion de la memoria usada en el programa
     for(int i=0;i<cantidad_particulas;i++){
         free(valores_particulas[i]);
     }
     free(valores_particulas);
-    
+    //Destruccion de la ventana y cierre de SDL
+    SDL_FreeSurface(screen_surface);
+    SDL_DestroyWindow(ventana);
+    SDL_Quit();
+
     return 0;
 }
