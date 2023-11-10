@@ -13,7 +13,7 @@
 
 #define CARACTERESMAXIMOS 100000
 #define modulo_direccion 8
-#define DELAY 5
+#define DELAY 100
 
 
 char* ingreso_string(){                                     //Getline casero
@@ -84,36 +84,25 @@ int** CSV(FILE *p,int *contador){       //Funcion que recibe los datos separados
 }
 
 int** BINARIO(FILE *p,int *contador){                       //Funcion que recive un archivo en binario y devuelve un array con los datos que almacena el archivo
-    int **valores_particulas=(int**)malloc(sizeof(int*));   //Se crea el arreglo en donde se guardaran los datos
-    valores_particulas[0]=(int*)malloc(sizeof(int)*3);      //Le agrego 3 columnas a esa fila creada
-
-    int datos_por_particula=0;                              //Guarda la cantidad de datos por linea ingresados
-    int cantidad_caracteres=0;                              //Guarda la cantidad de caracteres registrados por particula
-    char c;
+    int **valores_particulas = NULL;                        //Se crea el arreglo en donde se guardaran los datos
+    char string_particula[96];                              //String que guarda los 96 bits de los 3 datos de una particula
     int dato=0;                                             //Donde se guardara el dato
 
-    while((c=fgetc(p))!=EOF){                               //Mientras no se acabe se sigen registrando los caracteres
-        if(datos_por_particula==3){                                 //Si se completa la cantidad de datos por particulas(3) se ingresa
-            valores_particulas = (int**)realloc(valores_particulas, sizeof(int*) * (*contador+1));  // Se agrega otra fila
-            valores_particulas[*contador] = (int*)malloc(sizeof(int) * 3);                          //A esa fila se le agregan 3 columnas
-            datos_por_particula=0;                                                                  //Se reinicia el contador de datos por paricula
-        }
-        int aux=(int)c-'0';                                 //Conversion a entero
-        aux=aux<<(31-cantidad_caracteres);                  //Desplazamiento a la ubicacion en el entero final
-        dato+=aux;                                          //Se agrega al entero final
-        cantidad_caracteres++;                              //Se aumenta el contador de caracteres vistos en este dato
-        if(cantidad_caracteres==32){                        //Si se vieron 32, que es la cantidad de bits de un entero se ingresa
-            cantidad_caracteres=0;                          //Se reinicia el contador
-            if(datos_por_particula == 3){
-                dato = dato % modulo_direccion;
-            }
-            valores_particulas[*contador][datos_por_particula]=dato;    //Se asigna el dato al array
-            datos_por_particula++;                                      //Se aumenta el contador de datos vistos por particula
-            dato=0;                                                     //Se reinicia la variable que almacena el dato
-            if(datos_por_particula==3){                                 //Si se completa la cantidad de datos por particulas(3) se ingresa
-                (*contador)++;                                          //Se aumenta el contador de particulas
+    while(fread(string_particula, 1, 96, p) == 96){         //Mientras existan los bits necesarios para completar los datos de una particula se sigue leyendo
+        valores_particulas = realloc(valores_particulas,sizeof(int*)*((*contador)+1));       //Se agrega otra fila
+        valores_particulas[*contador] = (int*)malloc(sizeof(int)*3);                         //A esa fila se le agregan 3 columnas
+        for(int i=0;i<96;i++){              //Recorro los 3 datos extraidos
+            int aux=(int)string_particula[i%32]-'0';            //Conversion a entero
+            dato+=(aux<<(31-(i%32)));                           //Desplazamiento a la ubicacion en el entero final y se agrega al entero final
+            if((i%32)==31){                                     //Si se vieron 32, que es la cantidad de bits de un entero se ingresa
+                if((i+1)/32 == 3){                              //Al dato de la direccion le aplico el modulo para levarlo a valores dentro del rango
+                    dato = dato % modulo_direccion;
+                }
+                valores_particulas[*contador][i/32]=dato;               //Se asigna el dato al array
+                dato=0;                                                     //Se reinicia la variable que almacena el dato
             }
         }
+        (*contador)++;                                          //Se aumenta el contador de particulas
     }
     return  valores_particulas;     //Se retorna el array con los datos de las particulas
 }
