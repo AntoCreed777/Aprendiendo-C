@@ -14,6 +14,7 @@
 #define CARACTERESMAXIMOS 100000
 #define modulo_direccion 8
 #define modulo_peso 11
+#define tamano_particula 20
 #define DELAY 100
 
 
@@ -185,12 +186,12 @@ int ** cuerpo_lectura(int *cantidad_particulas){
     fclose(entrada);    //Cierro el arcivo porque ya no se va a usar mas
 
     //For que imprime en terminal el array con los datos ingresados
-    for(int i=0;i<(*cantidad_particulas);i++){
+    /*for(int i=0;i<(*cantidad_particulas);i++){
         for(int j=0;j<4;j++){
             printf("%s%s%u%s\t",BOLD,BLUE,(unsigned int)valores_particulas[i][j],NORMAL);
         }
         printf("\n");
-    }
+    }*/
     return valores_particulas;
 }
 
@@ -221,9 +222,13 @@ int main(int argc,char *argv[]){
     int running = 1;
     SDL_Event evento;
 
-    SDL_Rect rect;
-    rect.w = 20;
-    rect.h = 20;
+    SDL_Rect rect[cantidad_particulas];     //Declaracion de rectangulos
+    for(int i=0;i<cantidad_particulas;i++){
+        rect[i].x=valores_particulas[i][0];
+        rect[i].y=valores_particulas[i][1];
+        rect[i].h=tamano_particula;
+        rect[i].w=tamano_particula;
+    }
     SDL_Point mouse;
 
     int cambio_color = 0;
@@ -249,9 +254,7 @@ int main(int argc,char *argv[]){
         //Impresion en la ventana
         SDL_FillRect(screen_surface, NULL, SDL_MapRGB(screen_surface->format, 255 + cambio_color, 120 + cambio_color, 25 + cambio_color));
         for(int i=0;i<cantidad_particulas;i++){
-            rect.x = valores_particulas[i][0];
-            rect.y = valores_particulas[i][1];
-            SDL_FillRect(screen_surface, &rect, SDL_MapRGB(screen_surface->format, 0 + cambio_color, 255 + cambio_color, 0 + cambio_color));
+            SDL_FillRect(screen_surface, &rect[i], SDL_MapRGB(screen_surface->format, 0 + cambio_color, 255 + cambio_color, 0 + cambio_color));
         }
         SDL_UpdateWindowSurface(ventana);
 
@@ -259,7 +262,7 @@ int main(int argc,char *argv[]){
         //Calculo de la siguiente posicion y actualizacion de valores particulas
         for(int i=0;i<cantidad_particulas;i++){
             //Colicion con algun borde de la ventana
-            if(valores_particulas[i][0] == 0){
+            if(rect[i].x == 0){
                 if(valores_particulas[i][2] == 3){
                     valores_particulas[i][2]= 1;
                 }
@@ -270,7 +273,7 @@ int main(int argc,char *argv[]){
                     valores_particulas[i][2]= 7;
                 }
             }
-            if(valores_particulas[i][0] == DM.w){
+            if(rect[i].x == DM.w){
                 if(valores_particulas[i][2] == 7){
                     valores_particulas[i][2]= 5;
                 }
@@ -281,7 +284,7 @@ int main(int argc,char *argv[]){
                     valores_particulas[i][2]= 3;
                 }
             }
-            if(valores_particulas[i][1] == 0){
+            if(rect[i].y == 0){
                 if(valores_particulas[i][2] == 1){
                     valores_particulas[i][2]= 7;
                 }
@@ -292,7 +295,7 @@ int main(int argc,char *argv[]){
                     valores_particulas[i][2]= 5;
                 }
             }
-            if(valores_particulas[i][1] == DM.h){
+            if(rect[i].y == DM.h){
                 if(valores_particulas[i][2] == 7){
                     valores_particulas[i][2]= 1;
                 }
@@ -307,39 +310,44 @@ int main(int argc,char *argv[]){
             switch (valores_particulas[i][2])
             {
             case 0: //Derecha
-                valores_particulas[i][0]++ ;    //X
+                rect[i].x++ ;    //X
                 break;
             case 1: //Derecha Arriba
-                valores_particulas[i][0]++ ;    //X
-                valores_particulas[i][1]-- ;    //Y
+                rect[i].x++ ;    //X
+                rect[i].y-- ;    //Y
                 break;
             case 2: //Arriba
-                valores_particulas[i][1]-- ;    //Y
+                rect[i].y-- ;    //Y
                 break;
             case 3: //Arriba Izquierda
-                valores_particulas[i][0]-- ;    //X
-                valores_particulas[i][1]-- ;    //Y
+                rect[i].x-- ;    //X
+                rect[i].y-- ;    //Y
                 break;
             case 4: //Izquierda
-                valores_particulas[i][0]-- ;    //X
+                rect[i].x-- ;    //X
                 break;
             case 5: //Izquierda Abajo
-                valores_particulas[i][0]-- ;    //X
-                valores_particulas[i][1]++ ;    //Y
+                rect[i].x-- ;    //X
+                rect[i].y++ ;    //Y
                 break;
             case 6: //Abajo
-                valores_particulas[i][1]++ ;    //Y
+                rect[i].y++ ;    //Y
                 break;
             case 7: //Abajo Derevha
-                valores_particulas[i][0]++ ;    //X
-                valores_particulas[i][1]++ ;    //Y
+                rect[i].x++ ;    //X
+                rect[i].y++ ;    //Y
                 break;
             }
             //Colicion con otra particula
-
-
-
-
+            for(int j=0;j<cantidad_particulas;j++){ //Recorro las particulas
+                for(int k=0;k<cantidad_particulas;k++){ //Recorro las particulas menos la de la J
+                    if(SDL_HasIntersection(&rect[j],&rect[k]) && j!=k){ //Si se intersectan
+                        if(valores_particulas[j][3]<=valores_particulas[k][3]){
+                            valores_particulas[j][2]=rand()%modulo_direccion;
+                        }
+                    }
+                }
+            }
         }
     
         //SDL_Delay(DELAY);
