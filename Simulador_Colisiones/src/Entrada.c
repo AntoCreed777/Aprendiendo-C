@@ -135,14 +135,7 @@ int** TEXTO(FILE *p,int *contador){
     return  valores_particulas;
 }
 
-int main(int argc,char *argv[]){
-    /*
-    if(argc!=2){    //Corrobora que se hayan ingresado todos los datos necesarios
-        printf("%s%sFalta la direccion del archivo%s",BOLD,WHITE,NORMAL);
-        return 0;
-    }*/
-
-
+int ** cuerpo_lectura(int *cantidad_particulas){
     //Ingreso de la direccion del archivo
     FILE *entrada=ingreso_archivo();            //Se obtiene el puntero al archivo de ingreso
 
@@ -164,32 +157,42 @@ int main(int argc,char *argv[]){
     
 
     //Recopilacion de datos segun el tipo de entrada
-    int **valores_particulas=NULL;                                      //Array en donde se guardaran los datos
-    int cantidad_particulas=0;                                          //Guarda la cantidad de particulas ingresados
+    int **valores_particulas = NULL;                                    //Array en donde se guardaran los datos
     switch (tipo_entrada){                                              //Llamo la funcion para extraer los datos segun que tipo de archivo entrante es
         case 'c': //CSV
-            valores_particulas=CSV(entrada,&cantidad_particulas);
+            valores_particulas=CSV(entrada,cantidad_particulas);
             break;
         case 'b': //BINARIO
-            valores_particulas=BINARIO(entrada,&cantidad_particulas);
+            valores_particulas=BINARIO(entrada,cantidad_particulas);
             break;
         case 't': //TEXTO
-            valores_particulas=TEXTO(entrada,&cantidad_particulas);
+            valores_particulas=TEXTO(entrada,cantidad_particulas);
             break;
         default:
             printf("%s%sTipo de entrada no reconocido.%s\n",BOLD,WHITE,NORMAL);
-            return 1;
+            free(valores_particulas);
+            exit(0);
     }
 
     fclose(entrada);    //Cierro el arcivo porque ya no se va a usar mas
 
     //For que imprime en terminal el array con los datos ingresados
-    for(int i=0;i<cantidad_particulas;i++){
+    for(int i=0;i<(*cantidad_particulas);i++){
         for(int j=0;j<3;j++){
             printf("%s%s%u%s\t",BOLD,BLUE,(unsigned int)valores_particulas[i][j],NORMAL);
         }
         printf("\n");
     }
+    return valores_particulas;
+}
+
+int main(int argc,char *argv[]){
+    int cantidad_particulas=0;                                          //Guarda la cantidad de particulas ingresados
+    int **valores_particulas=cuerpo_lectura(&cantidad_particulas);      //Array en donde se guardaran los datos
+
+////////////////////////////////////////////////////////////////////////////
+////////////////PARTE 2 Y 3/////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 
 
     //Liberacion de la memoria usada en el programa
