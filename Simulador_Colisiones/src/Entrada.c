@@ -12,6 +12,7 @@
 
 #define CARACTERESMAXIMOS 100000
 #define modulo_direccion 8
+#define modulo_peso 11
 
 char* ingreso_string(){                                     //Getline casero
     printf("%sIngrese la direccion de su archivo: %s\n",BOLD,NORMAL);
@@ -65,16 +66,16 @@ FILE* ingreso_archivo(){    //Se valida que se haya abierto bien el archivo y de
 
 int** CSV(FILE *p,int *contador){       //Funcion que recibe los datos separados por ; y los guarda en un array
     int **valores_particulas = NULL;                                                               //Se crea el arreglo en donde se guardaran los datos
-    int numero1,numero2,numero3;                                                            //Numeros Auxiliares
+    int numero1,numero2,numero3,numero4;                                                            //Numeros Auxiliares
 
-    while(feof(p)!=true && fscanf(p,"%d;%d;%d;",&numero1,&numero2,&numero3)==3){            //Mientras no se acabe, extraere los datos de 3 en 3 separados por ;
+    while(feof(p)!=true && fscanf(p,"%d;%d;%d;%d;",&numero1,&numero2,&numero3,&numero4)==4){            //Mientras no se acabe, extraere los datos de 3 en 3 separados por ;
         valores_particulas=realloc(valores_particulas,sizeof(int*)*((*contador)+1));        //Le agrego otra fila al arreglo
-        valores_particulas[*contador]=(int*)malloc(sizeof(int)*3);                          //A la fila agregada le agrego 3 columnas
+        valores_particulas[*contador]=(int*)malloc(sizeof(int)*4);                          //A la fila agregada le agrego 3 columnas
 
         valores_particulas[*contador][0]=numero1;                                           //Asignacion de la coordenada X de forma definitiva
         valores_particulas[*contador][1]=numero2;                                           //Asignacion de la coordenada Y de forma definitiva
         valores_particulas[*contador][2]=numero3 % modulo_direccion;                                           //Asignacion de la Direccion de forma definitiva
-        
+        valores_particulas[*contador][3]=numero4 % modulo_peso;                                           //Asignacion de la Direccion de forma definitiva
         (*contador)++;                                                                      //Aumento el contador de particulas en uno
     }
     return  valores_particulas;                                                             //Retorno el arreglo con los datos de cada particula
@@ -82,21 +83,24 @@ int** CSV(FILE *p,int *contador){       //Funcion que recibe los datos separados
 
 int** BINARIO(FILE *p,int *contador){                       //Funcion que recive un archivo en binario y devuelve un array con los datos que almacena el archivo
     int **valores_particulas = NULL;                        //Se crea el arreglo en donde se guardaran los datos
-    char string_particula[96];                              //String que guarda los 96 bits de los 3 datos de una particula
+    char string_particula[128];                              //String que guarda los 96 bits de los 3 datos de una particula
     int dato=0;                                             //Donde se guardara el dato
 
-    while(fread(string_particula, 1, 96, p) == 96){         //Mientras existan los bits necesarios para completar los datos de una particula se sigue leyendo
+    while(fread(string_particula, 1, 128, p) == 128){         //Mientras existan los bits necesarios para completar los datos de una particula se sigue leyendo
         valores_particulas = realloc(valores_particulas,sizeof(int*)*((*contador)+1));       //Se agrega otra fila
-        valores_particulas[*contador] = (int*)malloc(sizeof(int)*3);                         //A esa fila se le agregan 3 columnas
-        for(int i=0;i<96;i++){              //Recorro los 3 datos extraidos
+        valores_particulas[*contador] = (int*)malloc(sizeof(int)*4);                         //A esa fila se le agregan 3 columnas
+        for(int i=0;i<128;i++){              //Recorro los 3 datos extraidos
             int aux=(int)string_particula[i%32]-'0';            //Conversion a entero
             dato+=(aux<<(31-(i%32)));                           //Desplazamiento a la ubicacion en el entero final y se agrega al entero final
             if((i%32)==31){                                     //Si se vieron 32, que es la cantidad de bits de un entero se ingresa
                 if((i+1)/32 == 3){                              //Al dato de la direccion le aplico el modulo para levarlo a valores dentro del rango
                     dato = dato % modulo_direccion;
                 }
+                if((i+1)/32 == 4){                              //Al dato del peso le aplico el modulo para levarlo a valores dentro del rango
+                    dato = dato % modulo_peso;
+                }
                 valores_particulas[*contador][i/32]=dato;               //Se asigna el dato al array
-                dato=0;                                                     //Se reinicia la variable que almacena el dato
+                dato=0;                                                 //Se reinicia la variable que almacena el dato
             }
         }
         (*contador)++;                                          //Se aumenta el contador de particulas
@@ -118,13 +122,14 @@ int** TEXTO(FILE *p,int *contador){
                     valores_particulas=(int**)malloc(sizeof(int*));                                 //Le agrego la primera fila
                 }
                 else{
-                    valores_particulas=realloc(valores_particulas,sizeof(int)*((*contador)+1));     //Le agrego otra fila al arreglo
+                    valores_particulas=realloc(valores_particulas,sizeof(int*)*((*contador)+1));     //Le agrego otra fila al arreglo
                 }
-                valores_particulas[*contador]=(int*)malloc(sizeof(int*)*3);                         //A la fila agregada le agrego 3 columnas
+                valores_particulas[*contador]=(int*)malloc(sizeof(int)*4);                         //A la fila agregada le agrego 3 columnas
 
                 valores_particulas[*contador][0]=x;                                                 //Asignacion de la coordenada X de forma definitiva
                 valores_particulas[*contador][1]=y;                                                 //Asignacion de la coordenada Y de forma definitiva
-                valores_particulas[*contador][2]=rand()%modulo_direccion;                              //Como no hay direccion lo asigno de forma random
+                valores_particulas[*contador][2]=rand()%modulo_direccion;                           //Como no hay direccion lo asigno de forma random
+                valores_particulas[*contador][3]=rand()%modulo_peso;                                //Como no hay peso lo asigno de forma random
                 
                 (*contador)++;                                                                      //Aumento el contador de particulas en uno
 
@@ -178,7 +183,7 @@ int ** cuerpo_lectura(int *cantidad_particulas){
 
     //For que imprime en terminal el array con los datos ingresados
     for(int i=0;i<(*cantidad_particulas);i++){
-        for(int j=0;j<3;j++){
+        for(int j=0;j<4;j++){
             printf("%s%s%u%s\t",BOLD,BLUE,(unsigned int)valores_particulas[i][j],NORMAL);
         }
         printf("\n");
