@@ -18,7 +18,6 @@
 #define modulo_direccion 8
 #define modulo_peso 11
 #define tamano_particula 30
-#define DELAY 20
 
 
 char* ingreso_string(){                                     //Getline casero
@@ -248,10 +247,6 @@ SDL_Rect* crear_particula(SDL_Rect *particulas, int *cantidad_particulas,SDL_Dis
 }
 
 SDL_Rect* destruir_particula(SDL_Rect *particulas, int *cantidad_particulas){
-    if((*cantidad_particulas) == 0){
-        SDL_Log("No quedan particulas para eliminar");
-        return particulas;
-    }
     int marcada=rand()%(*cantidad_particulas);
     for(int i=(marcada+1);i<(*cantidad_particulas);i++){
         particulas[i-1]=particulas[i];
@@ -297,8 +292,10 @@ int main(int argc,char *argv[]){
     if(!font){
         printf("TTF_OpenFont:   %s\n",TTF_GetError());
     }
-    SDL_Surface *texto;
+    SDL_Surface *surface_colisiones;
     SDL_Surface *tiempo_transcurrido;
+    SDL_Surface *delay;
+    SDL_Surface *contador;
 
     // Obtengo la maxima resolucion de la pantalla
     SDL_DisplayMode DM;
@@ -324,6 +321,7 @@ int main(int argc,char *argv[]){
     int cambio_color = 0;
     int contador_colisiones=0;
     time_t tiempo_inicial = time(NULL);
+    int DELAY=0;        //Controla el Delay de la pantalla
     while(running == 1){
         while(SDL_PollEvent(&evento)){
             if(evento.type == SDL_QUIT){
@@ -338,10 +336,27 @@ int main(int argc,char *argv[]){
                     guardado(particulas,cantidad_particulas);
                 }
                 else if(key == SDLK_m){
-                    particulas = crear_particula(particulas,&cantidad_particulas,DM);
+                    if(cantidad_particulas < 20){   //El limite de pariculas en pantalla es de 20
+                        particulas = crear_particula(particulas,&cantidad_particulas,DM);
+                    }
                 }
                 else if(key == SDLK_k){
-                    particulas=destruir_particula(particulas,&cantidad_particulas);
+                    if(cantidad_particulas >0){ //Si existen particulas se eliminan
+                        particulas=destruir_particula(particulas,&cantidad_particulas);
+                    }
+                }
+                else if(key == SDLK_t){
+                    if(DELAY < 100){    //Solo se puede colocar un DELAY maximo de 100
+                        DELAY++;
+                    }
+                }
+                else if(key == SDLK_y){
+                    if(DELAY > 0){     //No puede ser negativo el DELAY
+                        DELAY--;
+                    }
+                }
+                else if(key == SDLK_r){ //Se reinicia el contador de coliciones
+                    contador_colisiones=0;
                 }
             }
             if(evento.type == SDL_MOUSEBUTTONDOWN){
@@ -355,7 +370,7 @@ int main(int argc,char *argv[]){
         //Se actualiza la surface del texto
         char texto_colisiones[30];
         sprintf(texto_colisiones,"Colisiones: %d",contador_colisiones);
-        texto = TTF_RenderText_Solid(font,texto_colisiones,colorTexto);
+        surface_colisiones = TTF_RenderText_Solid(font,texto_colisiones,colorTexto);
 
         //Se actualiza la surface del tiempo transcurrido
         char texto_tiempo[30];
@@ -363,6 +378,16 @@ int main(int argc,char *argv[]){
         time_t tiempo_que_paso = tiempo_actual - tiempo_inicial;
         sprintf(texto_tiempo,"Tiempo transcurrido: %ld",(long int)tiempo_que_paso);
         tiempo_transcurrido = TTF_RenderText_Solid(font,texto_tiempo,colorTexto);
+        
+        // Se actualiza la superficie del Delay
+        char texto_delay[30];
+        sprintf(texto_delay,"DELAY: %d",DELAY);
+        delay = TTF_RenderText_Solid(font,texto_delay,colorTexto);
+
+        // Se actualiza la superficie del contador de particulas
+        char texto_contador[30];
+        sprintf(texto_contador,"Cantidad de Particulas: %d",cantidad_particulas);
+        contador = TTF_RenderText_Solid(font,texto_contador,colorTexto);
 
         //Limpia la ventana
         SDL_FillRect(screen_surface, NULL, SDL_MapRGB(screen_surface->format, 255 + cambio_color, 120 + cambio_color, 25 + cambio_color));
@@ -373,10 +398,14 @@ int main(int argc,char *argv[]){
         }
 
         //Se agrega el Texto a la pantalla
-        SDL_Rect cuadro_texto={0,30};
+        SDL_Rect cuadro_texto={0,90};
         SDL_Rect cuadro_tiempo_transcurrido={0,0};
-        SDL_BlitSurface(texto, NULL, screen_surface, &cuadro_texto);
+        SDL_Rect cuadro_delay={0,30};
+        SDL_Rect cuadro_contador={0,60};
+        SDL_BlitSurface(surface_colisiones, NULL, screen_surface, &cuadro_texto);
         SDL_BlitSurface(tiempo_transcurrido, NULL, screen_surface, &cuadro_tiempo_transcurrido);
+        SDL_BlitSurface(delay, NULL, screen_surface, &cuadro_delay);
+        SDL_BlitSurface(contador, NULL, screen_surface, &cuadro_contador);
         
         //Se imprime la pantalla
         SDL_UpdateWindowSurface(ventana);
@@ -384,7 +413,7 @@ int main(int argc,char *argv[]){
         //Calculo de la siguiente posicion y actualizacion de valores particulas
         for(int i=0;i<cantidad_particulas;i++){
             //Colicion con algun borde de la ventana
-            if(particulas[i].x == 0){
+            if(particulas[i].x <= 0){                       //Borde Izquierdo
                 if(particulas[i].d == 3){
                     particulas[i].d= 1;
                 }
@@ -395,7 +424,7 @@ int main(int argc,char *argv[]){
                     particulas[i].d= 7;
                 }
             }
-            if(particulas[i].x == DM.w-tamano_particula){
+            if(particulas[i].x >= DM.w-tamano_particula){   //Borde Derecho
                 if(particulas[i].d == 7){
                     particulas[i].d= 5;
                 }
@@ -406,7 +435,7 @@ int main(int argc,char *argv[]){
                     particulas[i].d= 3;
                 }
             }
-            if(particulas[i].y == 0){
+            if(particulas[i].y <= 0){                       //Borde Superior
                 if(particulas[i].d == 1){
                     particulas[i].d= 7;
                 }
@@ -417,7 +446,7 @@ int main(int argc,char *argv[]){
                     particulas[i].d= 5;
                 }
             }
-            if(particulas[i].y == DM.h-tamano_particula){
+            if(particulas[i].y >= DM.h-tamano_particula){   //Borde Inferior
                 if(particulas[i].d == 7){
                     particulas[i].d= 1;
                 }
@@ -429,6 +458,90 @@ int main(int argc,char *argv[]){
                 }
             }
             
+            //Colicion con otra particula
+            for(int j=0;j<cantidad_particulas;j++){ //Recorro las particulas
+                for(int k=0;k<cantidad_particulas;k++){ //Recorro las particulas menos la de la J
+                    if(SDL_HasIntersection(&particulas[j],&particulas[k]) && j!=k && particulas[j].p<=particulas[k].p){ //Si se intersectan 
+                        SDL_Rect interseccion;
+                        int aux_direccion, arriba=0,abajo=0,izquierda=0,derecha=0;
+                        SDL_IntersectRect(&particulas[j], &particulas[k], &interseccion);              //Extraigo la interseccion
+
+                        //Detecto donde se transpazo el limite de la particula
+                        if(interseccion.y == particulas[j].y){                                         // La intersección esta en la parte superior de la particula
+                            arriba=1;
+                        }
+                        if(interseccion.y + interseccion.h == particulas[j].y + particulas[j].h){      //La interseccion esta en la parte inferior de la particula
+                            abajo=1;
+                        }
+                        if(interseccion.x == particulas[j].x){                                         //La interseccion esta en la parte izquierda de la particula
+                            izquierda=1;
+                        }
+                        if(interseccion.x + interseccion.w == particulas[j].x + particulas[j].w){      //La interseccion esta en la parte derecha de la particula
+                            derecha=1;
+                        }
+
+                        if(arriba == 1 && izquierda == 1){
+                            do{
+                                aux_direccion=rand()%modulo_direccion;
+                            }while(aux_direccion == 2 || aux_direccion == 3 || aux_direccion == 4);
+                        }
+                        else if(arriba == 1 && derecha == 1){
+                            do{
+                                aux_direccion=rand()%modulo_direccion;
+                            }while(aux_direccion == 0 ||aux_direccion == 1 || aux_direccion == 2);
+                        }
+                        else if(abajo == 1 && derecha == 1){
+                            do{
+                                aux_direccion=rand()%modulo_direccion;
+                            }while(aux_direccion == 0 ||aux_direccion == 7 || aux_direccion == 6);
+                        }
+                        else if(abajo == 1 && izquierda == 1){
+                            do{
+                                aux_direccion=rand()%modulo_direccion;
+                            }while(aux_direccion == 4 ||aux_direccion == 5 || aux_direccion == 6);
+                        }
+                        particulas[j].d=aux_direccion;
+
+                        // Reproducir sonido de golpe
+                        Mix_PlayChannel(1,sonido_golpe, 0);
+                        cambio_color+= 4;
+                        contador_colisiones++;
+                        switch (particulas[j].d)    //Los desplazo un espacio extra
+                        {
+                        case 0: //Derecha
+                            particulas[j].x++ ;    //X
+                            break;
+                        case 1: //Derecha Arriba
+                            particulas[j].x++ ;    //X
+                            particulas[j].y-- ;    //Y
+                            break;
+                        case 2: //Arriba
+                            particulas[j].y-- ;    //Y
+                            break;
+                        case 3: //Arriba Izquierda
+                            particulas[j].x-- ;    //X
+                            particulas[j].y-- ;    //Y
+                            break;
+                        case 4: //Izquierda
+                            particulas[j].x-- ;    //X
+                            break;
+                        case 5: //Izquierda Abajo
+                            particulas[j].x-- ;    //X
+                            particulas[j].y++ ;    //Y
+                            break;
+                        case 6: //Abajo
+                            particulas[j].y++ ;    //Y
+                            break;
+                        case 7: //Abajo Derevha
+                            particulas[j].x++ ;    //X
+                            particulas[j].y++ ;    //Y
+                            break;
+                        }
+                    }
+                }
+            }
+        
+            //Movimiento +1
             switch (particulas[i].d)
             {
             case 0: //Derecha
@@ -460,34 +573,16 @@ int main(int argc,char *argv[]){
                 particulas[i].y++ ;    //Y
                 break;
             }
-            //Colicion con otra particula
-            for(int j=0;j<cantidad_particulas;j++){ //Recorro las particulas
-                for(int k=0;k<cantidad_particulas;k++){ //Recorro las particulas menos la de la J
-                    if(SDL_HasIntersection(&particulas[j],&particulas[k]) && j!=k){ //Si se intersectan
-                        if(particulas[j].p<=particulas[k].p){
-                            int aux;
-                            do{
-                                aux=rand()%modulo_direccion;
-                            }while(aux==particulas[j].d);
-                            particulas[j].d=aux;
-                            // Reproducir sonido de golpe
-                            Mix_PlayChannel(1,sonido_golpe, 0);
-                            cambio_color+= 4;
-                            contador_colisiones++;
-                        }
-                    }
-                }
-            }
         }
     
-        //SDL_Delay(DELAY);
+        SDL_Delay(DELAY);
     }
 
     //Liberacion de la memoria usada en el programa
     free(particulas);
     //Destruccion de la ventana y cierre de SDL
     TTF_CloseFont(font);
-    SDL_FreeSurface(texto);
+    SDL_FreeSurface(surface_colisiones);
     SDL_FreeSurface(screen_surface);
     SDL_DestroyWindow(ventana);
     Mix_FreeChunk(sonido_fondo);
