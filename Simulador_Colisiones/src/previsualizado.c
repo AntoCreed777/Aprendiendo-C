@@ -381,7 +381,11 @@ int main(int argc,char *argv[]){
                 for(int k=0;k<cantidad_particulas;k++){ //Recorro las particulas menos la de la J
                     if(SDL_HasIntersection(&rect[j],&rect[k]) && j!=k){ //Si se intersectan
                         if(valores_particulas[j][3]<=valores_particulas[k][3]){
-                            valores_particulas[j][2]=rand()%modulo_direccion;
+                            int aux;
+                            do{
+                                aux=rand()%modulo_direccion;
+                            }while(aux==valores_particulas[j][2]);
+                            valores_particulas[j][2]=aux;
                                 // Reproducir sonido de golpe
                                 Mix_PlayChannel(1,sonido_golpe, 0);
                         }
