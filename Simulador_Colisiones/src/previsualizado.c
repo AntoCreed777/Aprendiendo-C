@@ -246,6 +246,20 @@ SDL_Rect* crear_particula(SDL_Rect *particulas, int *cantidad_particulas,SDL_Dis
     return particulas;
 }
 
+SDL_Rect* destruir_particula(SDL_Rect *particulas, int *cantidad_particulas){
+    if((*cantidad_particulas) == 0){
+        SDL_Log("No quedan particulas para eliminar");
+        return particulas;
+    }
+    int marcada=rand()%(*cantidad_particulas);
+    for(int i=(marcada+1);i<(*cantidad_particulas);i++){
+        particulas[i-1]=particulas[i];
+    }
+    (*cantidad_particulas)--;
+    particulas=(SDL_Rect*)realloc(particulas,sizeof(SDL_Rect)*(*cantidad_particulas));
+    return particulas;
+}
+
 int main(int argc,char *argv[]){
     int cantidad_particulas=0;                                          //Guarda la cantidad de particulas ingresados
     SDL_Rect *particulas=cuerpo_lectura(&cantidad_particulas);          //Array en donde se guardaran los datos
@@ -315,6 +329,9 @@ int main(int argc,char *argv[]){
                 else if(key == SDLK_m){
                     particulas = crear_particula(particulas,&cantidad_particulas,DM);
                 }
+                else if(key == SDLK_k){
+                    particulas=destruir_particula(particulas,&cantidad_particulas);
+                }
             }
             if(evento.type == SDL_MOUSEBUTTONDOWN){
                 mouse.x = evento.button.x;
@@ -330,8 +347,6 @@ int main(int argc,char *argv[]){
         }
         SDL_FillRect(screen_surface, &muralla, SDL_MapRGB(screen_surface->format, 0, 0, 0));
         SDL_UpdateWindowSurface(ventana);
-
-        cambio_color++;
         //Calculo de la siguiente posicion y actualizacion de valores particulas
         for(int i=0;i<cantidad_particulas;i++){
             //Colicion con algun borde de la ventana
@@ -421,8 +436,9 @@ int main(int argc,char *argv[]){
                                 aux=rand()%modulo_direccion;
                             }while(aux==particulas[j].d);
                             particulas[j].d=aux;
-                                // Reproducir sonido de golpe
-                                Mix_PlayChannel(1,sonido_golpe, 0);
+                            // Reproducir sonido de golpe
+                            Mix_PlayChannel(1,sonido_golpe, 0);
+                            cambio_color+= 4;
                         }
                     }
                 }
