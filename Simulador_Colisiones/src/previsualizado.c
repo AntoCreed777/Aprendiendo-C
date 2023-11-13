@@ -17,7 +17,7 @@
 #define modulo_direccion 8
 #define modulo_peso 11
 #define tamano_particula 30
-#define DELAY 100
+#define DELAY 20
 
 
 char* ingreso_string(){                                     //Getline casero
@@ -186,9 +186,9 @@ SDL_Rect* cuerpo_lectura(int *cantidad_particulas){
     fclose(entrada);    //Cierro el arcivo porque ya no se va a usar mas
 
     //For que imprime en terminal el array con los datos ingresados
-    for(int i=0;i<(*cantidad_particulas);i++){
+    /*for(int i=0;i<(*cantidad_particulas);i++){
         printf("%s%s%u\t%u\t%u\t%u%s\n",BOLD,BLUE,particulas[i].x,particulas[i].y,particulas[i].d,particulas[i].p,NORMAL);
-    }
+    }*/
     return particulas;
 }
 
@@ -212,6 +212,38 @@ void guardado(SDL_Rect *particulas,int cantidad_particulas){
     }
 
     fclose(salida);
+}
+
+SDL_Rect* crear_particula(SDL_Rect *particulas, int *cantidad_particulas,SDL_DisplayMode Dimencion){
+    (*cantidad_particulas)++;
+    particulas=(SDL_Rect*)realloc(particulas,sizeof(SDL_Rect)*(*cantidad_particulas));
+    int x,y,colision=0;
+    while(1){
+        x=rand()%(Dimencion.w-tamano_particula);    //Obtengo la posicion en X
+        y=rand()%(Dimencion.h-tamano_particula);    //Obtengo la posicion en Y
+        for(int i=0;i<(*cantidad_particulas);i++){      //Recorro cada particula
+            if(x <= particulas[i].x+tamano_particula && x >= particulas[i].x && y <= particulas[i].y+tamano_particula && y >= particulas[i].y){
+                colision=1; //Si hay una particula
+                break;      //Sale del for
+            }
+        }
+        if(!colision){
+            particulas[(*cantidad_particulas)-1].x=x;
+            particulas[(*cantidad_particulas)-1].y=y;
+            break;
+        }
+    }
+
+    int d=rand()%modulo_direccion;
+    particulas[(*cantidad_particulas)-1].d=d;
+
+    int p=rand()%modulo_peso;
+    particulas[(*cantidad_particulas)-1].p=p;
+
+    particulas[(*cantidad_particulas)-1].w=tamano_particula;
+    particulas[(*cantidad_particulas)-1].h=tamano_particula;
+
+    return particulas;
 }
 
 int main(int argc,char *argv[]){
@@ -240,9 +272,10 @@ int main(int argc,char *argv[]){
     // Obtengo la maxima resolucion de la pantalla
     SDL_DisplayMode DM;
     SDL_GetDesktopDisplayMode(0, &DM);
-
+    //DM.h-= 100;
+    //DM.w-= 100;
     //Creacion de la ventana
-    SDL_Window *ventana = SDL_CreateWindow("Desplegable",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,DM.w,DM.h,SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_FULLSCREEN);
+    SDL_Window *ventana = SDL_CreateWindow("Desplegable",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,DM.w,DM.h,SDL_WINDOW_BORDERLESS | SDL_WINDOW_SHOWN);
     if(ventana == NULL){
         SDL_Log("Incapaz de crear la ventana: %s", SDL_GetError());
         return 1;
@@ -256,6 +289,11 @@ int main(int argc,char *argv[]){
         particulas[i].h=tamano_particula;
         particulas[i].w=tamano_particula;
     }
+    SDL_Rect muralla;
+    muralla.x=DM.w; //Posicion en X
+    muralla.y=0;    //Posicion en Y
+    muralla.w=tamano_particula;    //Ancho
+    muralla.h=DM.h; //Alto
 
     SDL_Point mouse;
 
@@ -274,6 +312,9 @@ int main(int argc,char *argv[]){
                 else if(key == SDLK_g){
                     guardado(particulas,cantidad_particulas);
                 }
+                else if(key == SDLK_m){
+                    particulas = crear_particula(particulas,&cantidad_particulas,DM);
+                }
             }
             if(evento.type == SDL_MOUSEBUTTONDOWN){
                 mouse.x = evento.button.x;
@@ -287,6 +328,7 @@ int main(int argc,char *argv[]){
         for(int i=0;i<cantidad_particulas;i++){
             SDL_FillRect(screen_surface, &particulas[i], SDL_MapRGB(screen_surface->format, 0 + cambio_color, 255 + cambio_color, 0 + cambio_color));
         }
+        SDL_FillRect(screen_surface, &muralla, SDL_MapRGB(screen_surface->format, 0, 0, 0));
         SDL_UpdateWindowSurface(ventana);
 
         cambio_color++;
@@ -304,7 +346,7 @@ int main(int argc,char *argv[]){
                     particulas[i].d= 7;
                 }
             }
-            if(particulas[i].x == DM.w){
+            if(particulas[i].x == DM.w-tamano_particula){
                 if(particulas[i].d == 7){
                     particulas[i].d= 5;
                 }
@@ -326,7 +368,7 @@ int main(int argc,char *argv[]){
                     particulas[i].d= 5;
                 }
             }
-            if(particulas[i].y == DM.h){
+            if(particulas[i].y == DM.h-tamano_particula){
                 if(particulas[i].d == 7){
                     particulas[i].d= 1;
                 }
