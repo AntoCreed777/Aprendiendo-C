@@ -1,3 +1,4 @@
+#include <SDL2/SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -64,53 +65,58 @@ FILE* ingreso_archivo(){    //Se valida que se haya abierto bien el archivo y de
     
 }
 
-int** CSV(FILE *p,int *contador){       //Funcion que recibe los datos separados por ; y los guarda en un array
-    int **valores_particulas = NULL;                                                               //Se crea el arreglo en donde se guardaran los datos
+SDL_Rect* CSV(FILE *p,int *contador){       //Funcion que recibe los datos separados por ; y los guarda en un array
+    SDL_Rect *particulas = NULL;                                                               //Se crea el arreglo en donde se guardaran los datos
     int numero1,numero2,numero3,numero4;                                                            //Numeros Auxiliares
 
     while(feof(p)!=true && fscanf(p,"%d;%d;%d;%d;",&numero1,&numero2,&numero3,&numero4)==4){            //Mientras no se acabe, extraere los datos de 3 en 3 separados por ;
-        valores_particulas=realloc(valores_particulas,sizeof(int*)*((*contador)+1));        //Le agrego otra fila al arreglo
-        valores_particulas[*contador]=(int*)malloc(sizeof(int)*4);                          //A la fila agregada le agrego 3 columnas
+        particulas=(SDL_Rect*)realloc(particulas,sizeof(SDL_Rect)*((*contador)+1));        //Le agrego otra fila al arreglo
 
-        valores_particulas[*contador][0]=numero1;                                           //Asignacion de la coordenada X de forma definitiva
-        valores_particulas[*contador][1]=numero2;                                           //Asignacion de la coordenada Y de forma definitiva
-        valores_particulas[*contador][2]=numero3 % modulo_direccion;                                           //Asignacion de la Direccion de forma definitiva
-        valores_particulas[*contador][3]=numero4 % modulo_peso;                                           //Asignacion de la Direccion de forma definitiva
-        (*contador)++;                                                                      //Aumento el contador de particulas en uno
+        particulas[*contador].x=numero1;                                           //Asignacion de la coordenada X de forma definitiva
+        particulas[*contador].y=numero2;                                           //Asignacion de la coordenada Y de forma definitiva
+        particulas[*contador].d=numero3 % modulo_direccion;                        //Asignacion de la Direccion de forma definitiva
+        particulas[*contador].p=numero4 % modulo_peso;                             //Asignacion de la Direccion de forma definitiva
+        (*contador)++;                                                             //Aumento el contador de particulas en uno
     }
-    return  valores_particulas;                                                             //Retorno el arreglo con los datos de cada particula
+    return  particulas;                                                            //Retorno el arreglo con los datos de cada particula
 }
 
-int** BINARIO(FILE *p,int *contador){                       //Funcion que recive un archivo en binario y devuelve un array con los datos que almacena el archivo
-    int **valores_particulas = NULL;                        //Se crea el arreglo en donde se guardaran los datos
+SDL_Rect* BINARIO(FILE *p,int *contador){                       //Funcion que recive un archivo en binario y devuelve un array con los datos que almacena el archivo
+    SDL_Rect *particulas = NULL;                        //Se crea el arreglo en donde se guardaran los datos
     char string_particula[128];                              //String que guarda los 96 bits de los 3 datos de una particula
     int dato=0;                                             //Donde se guardara el dato
 
     while(fread(string_particula, 1, 128, p) == 128){         //Mientras existan los bits necesarios para completar los datos de una particula se sigue leyendo
-        valores_particulas = realloc(valores_particulas,sizeof(int*)*((*contador)+1));       //Se agrega otra fila
-        valores_particulas[*contador] = (int*)malloc(sizeof(int)*4);                         //A esa fila se le agregan 3 columnas
+        particulas = (SDL_Rect*)realloc(particulas,sizeof(SDL_Rect)*((*contador)+1));       //Se agrega otra fila
         for(int i=0;i<128;i++){              //Recorro los 3 datos extraidos
             int aux=(int)string_particula[i%32]-'0';            //Conversion a entero
             dato+=(aux<<(31-(i%32)));                           //Desplazamiento a la ubicacion en el entero final y se agrega al entero final
             if((i%32)==31){                                     //Si se vieron 32, que es la cantidad de bits de un entero se ingresa
-                if((i+1)/32 == 3){                              //Al dato de la direccion le aplico el modulo para levarlo a valores dentro del rango
+                if((i+1)/32 == 1){                              //Al dato de la direccion le aplico el modulo para levarlo a valores dentro del rango
+                    particulas[*contador].x=dato;               //Se asigna el dato de direccion al array
+                }
+                else if((i+1)/32 == 2){                         //Al dato de la direccion le aplico el modulo para levarlo a valores dentro del rango
+                    particulas[*contador].y=dato;               //Se asigna el dato de direccion al array
+                }
+                else if((i+1)/32 == 3){                         //Al dato de la direccion le aplico el modulo para levarlo a valores dentro del rango
                     dato = dato % modulo_direccion;
+                    particulas[*contador].d=dato;               //Se asigna el dato de direccion al array
                 }
-                if((i+1)/32 == 4){                              //Al dato del peso le aplico el modulo para levarlo a valores dentro del rango
+                else if((i+1)/32 == 4){                         //Al dato del peso le aplico el modulo para levarlo a valores dentro del rango
                     dato = dato % modulo_peso;
+                    particulas[*contador].p=dato;               //Se asigna el dato dee peso al array
                 }
-                valores_particulas[*contador][i/32]=dato;               //Se asigna el dato al array
                 dato=0;                                                 //Se reinicia la variable que almacena el dato
             }
         }
         (*contador)++;                                          //Se aumenta el contador de particulas
     }
-    return  valores_particulas;     //Se retorna el array con los datos de las particulas
+    return  particulas;     //Se retorna el array con los datos de las particulas
 }
 
-int** TEXTO(FILE *p,int *contador){
+SDL_Rect* TEXTO(FILE *p,int *contador){
     srand (time(NULL));                                                                         //Se inicializa la semilla del random
-    int **valores_particulas=NULL;
+    SDL_Rect *particulas = NULL;
 
     char buffer[CARACTERESMAXIMOS];                                             //Se guarda la linea actual
     int x,y;
@@ -118,29 +124,22 @@ int** TEXTO(FILE *p,int *contador){
         char *ptr = buffer;
         while ((ptr = strstr(ptr, "(")) != NULL) {
             if (sscanf(ptr, "(%d,%d)", &x, &y) == 2) {
-                if((*contador)==0){
-                    valores_particulas=(int**)malloc(sizeof(int*));                                 //Le agrego la primera fila
-                }
-                else{
-                    valores_particulas=realloc(valores_particulas,sizeof(int*)*((*contador)+1));     //Le agrego otra fila al arreglo
-                }
-                valores_particulas[*contador]=(int*)malloc(sizeof(int)*4);                         //A la fila agregada le agrego 3 columnas
+                particulas=(SDL_Rect*)realloc(particulas,sizeof(SDL_Rect)*((*contador)+1));     //Le agrego otra fila al arreglo
 
-                valores_particulas[*contador][0]=x;                                                 //Asignacion de la coordenada X de forma definitiva
-                valores_particulas[*contador][1]=y;                                                 //Asignacion de la coordenada Y de forma definitiva
-                valores_particulas[*contador][2]=rand()%modulo_direccion;                           //Como no hay direccion lo asigno de forma random
-                valores_particulas[*contador][3]=rand()%modulo_peso;                                //Como no hay peso lo asigno de forma random
+                particulas[*contador].x=x;                                                 //Asignacion de la coordenada X de forma definitiva
+                particulas[*contador].y=y;                                                 //Asignacion de la coordenada Y de forma definitiva
+                particulas[*contador].d=rand()%modulo_direccion;                           //Como no hay direccion lo asigno de forma random
+                particulas[*contador].p=rand()%modulo_peso;                                //Como no hay peso lo asigno de forma random
                 
                 (*contador)++;                                                                      //Aumento el contador de particulas en uno
-
             }
             ptr++;
         }
     }
-    return  valores_particulas;
+    return  particulas;
 }
 
-int ** cuerpo_lectura(int *cantidad_particulas){
+SDL_Rect* cuerpo_lectura(int *cantidad_particulas){
     //Ingreso de la direccion del archivo
     FILE *entrada=ingreso_archivo();            //Se obtiene el puntero al archivo de ingreso
 
@@ -162,20 +161,20 @@ int ** cuerpo_lectura(int *cantidad_particulas){
     
 
     //Recopilacion de datos segun el tipo de entrada
-    int **valores_particulas = NULL;                                    //Array en donde se guardaran los datos
+    SDL_Rect *particulas = NULL;                                        //Array en donde se guardaran los datos
     switch (tipo_entrada){                                              //Llamo la funcion para extraer los datos segun que tipo de archivo entrante es
         case 'c': //CSV
-            valores_particulas=CSV(entrada,cantidad_particulas);
+            particulas=CSV(entrada,cantidad_particulas);
             break;
         case 'b': //BINARIO
-            valores_particulas=BINARIO(entrada,cantidad_particulas);
+            particulas=BINARIO(entrada,cantidad_particulas);
             break;
         case 't': //TEXTO
-            valores_particulas=TEXTO(entrada,cantidad_particulas);
+            particulas=TEXTO(entrada,cantidad_particulas);
             break;
         default:
             printf("%s%sTipo de entrada no reconocido.%s\n",BOLD,WHITE,NORMAL);
-            free(valores_particulas);
+            free(particulas);
             exit(0);
     }
 
@@ -183,17 +182,14 @@ int ** cuerpo_lectura(int *cantidad_particulas){
 
     //For que imprime en terminal el array con los datos ingresados
     for(int i=0;i<(*cantidad_particulas);i++){
-        for(int j=0;j<4;j++){
-            printf("%s%s%u%s\t",BOLD,BLUE,(unsigned int)valores_particulas[i][j],NORMAL);
-        }
-        printf("\n");
+        printf("%s%s%u\t%u\t%u\t%u%s\n",BOLD,BLUE,particulas[i].x,particulas[i].y,particulas[i].d,particulas[i].p,NORMAL);
     }
-    return valores_particulas;
+    return particulas;
 }
 
 int main(int argc,char *argv[]){
     int cantidad_particulas=0;                                          //Guarda la cantidad de particulas ingresados
-    int **valores_particulas=cuerpo_lectura(&cantidad_particulas);      //Array en donde se guardaran los datos
+    SDL_Rect *particulas=cuerpo_lectura(&cantidad_particulas);          //Array en donde se guardaran los datos
 
 ////////////////////////////////////////////////////////////////////////////
 ////////////////PARTE 2 Y 3/////////////////////////////////////////////////
@@ -201,10 +197,7 @@ int main(int argc,char *argv[]){
 
 
     //Liberacion de la memoria usada en el programa
-    for(int i=0;i<cantidad_particulas;i++){
-        free(valores_particulas[i]);
-    }
-    free(valores_particulas);
-    
+    free(particulas);
+    SDL_Quit();
     return 0;
 }
