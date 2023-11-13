@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -229,7 +230,18 @@ int main(int argc,char *argv[]){
         SDL_Log("Incapaz de inicializar SDL: %s", SDL_GetError());
         return 1;
     }
-
+    //Configuracion Audio
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) < 0) {
+        printf("Error al inicializar SDL_mixer: %s\n", Mix_GetError());
+        return -1;
+    }
+    Mix_Chunk *sonido_fondo = Mix_LoadWAV("assets/Sonido_Fondo.mp3");
+    Mix_Chunk *sonido_golpe = Mix_LoadWAV("assets/right-cross-cross.mp3");
+    if (!sonido_golpe || !sonido_fondo) {
+        printf("Error al cargar el archivo de audio: %s\n", Mix_GetError());
+        return -1;
+    }
+    Mix_PlayChannel(0,sonido_fondo, -1);
     // Obtengo la maxima resolucion de la pantalla
     SDL_DisplayMode DM;
     SDL_GetDesktopDisplayMode(0, &DM);
@@ -370,6 +382,8 @@ int main(int argc,char *argv[]){
                     if(SDL_HasIntersection(&rect[j],&rect[k]) && j!=k){ //Si se intersectan
                         if(valores_particulas[j][3]<=valores_particulas[k][3]){
                             valores_particulas[j][2]=rand()%modulo_direccion;
+                                // Reproducir sonido de golpe
+                                Mix_PlayChannel(1,sonido_golpe, 0);
                         }
                     }
                 }
@@ -387,6 +401,9 @@ int main(int argc,char *argv[]){
     //Destruccion de la ventana y cierre de SDL
     SDL_FreeSurface(screen_surface);
     SDL_DestroyWindow(ventana);
+    Mix_FreeChunk(sonido_fondo);
+    Mix_FreeChunk(sonido_golpe);
+    Mix_CloseAudio();
     SDL_Quit();
 
     return 0;
