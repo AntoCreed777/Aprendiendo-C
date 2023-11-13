@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <time.h>
+#include <sys/stat.h>
 
 #define BOLD "\e[1m"
 #define WHITE "\e[7m"
@@ -195,6 +196,28 @@ int ** cuerpo_lectura(int *cantidad_particulas){
     return valores_particulas;
 }
 
+void guardado(int **valores_particulas,SDL_Rect *rectangulos,int cantidad_particulas){
+    char nombre_carpeta[40]= "Guardado Colisionador Particulas";
+    if(access(nombre_carpeta,0) != 0){
+        mkdir(nombre_carpeta);
+    }
+
+    char nombre_archivo[55];
+    time_t tiempo;
+    tiempo=time(NULL);
+
+    sprintf(nombre_archivo, "%s/Save_%ld.txt", nombre_carpeta, (long int) tiempo);
+
+    FILE *salida = fopen(nombre_archivo,"w");
+
+    fputc('c',salida);
+    for(int i=0; i<cantidad_particulas;i++){
+        fprintf(salida,"%d;%d;%d;%d;\n",rectangulos[i].x,rectangulos[i].y,valores_particulas[i][2],valores_particulas[i][3]);
+    }
+
+    feof(salida);
+}
+
 int main(int argc,char *argv[]){
     int cantidad_particulas=0;                                          //Guarda la cantidad de particulas ingresados
     int **valores_particulas=cuerpo_lectura(&cantidad_particulas);
@@ -242,6 +265,9 @@ int main(int argc,char *argv[]){
                 SDL_Keycode key = evento.key.keysym.sym;
                 if(key == SDLK_ESCAPE){
                     running =0;
+                }
+                else if(key == SDLK_g){
+                    guardado(valores_particulas,rect,cantidad_particulas);
                 }
             }
             if(evento.type == SDL_MOUSEBUTTONDOWN){
