@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -283,11 +284,25 @@ int main(int argc,char *argv[]){
         return -1;
     }
     Mix_PlayChannel(0,sonido_fondo, -1);
+    //Inicializo SDL_TTF
+    if (TTF_Init() != 0) {
+        printf("Error al inicializar SDL_ttf: %s\n", TTF_GetError());
+        SDL_Quit();
+        return -1;
+    }
+
+    //Creacion del Texto
+    TTF_Font *font;
+    font = TTF_OpenFont("assets/Handlee-Regular.ttf",24);
+    if(!font){
+        printf("TTF_OpenFont:   %s\n",TTF_GetError());
+    }
+    SDL_Surface *texto;
+    SDL_Surface *tiempo_transcurrido;
+
     // Obtengo la maxima resolucion de la pantalla
     SDL_DisplayMode DM;
     SDL_GetDesktopDisplayMode(0, &DM);
-    //DM.h-= 100;
-    //DM.w-= 100;
     //Creacion de la ventana
     SDL_Window *ventana = SDL_CreateWindow("Desplegable",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,DM.w,DM.h,SDL_WINDOW_BORDERLESS | SDL_WINDOW_SHOWN);
     if(ventana == NULL){
@@ -303,16 +318,12 @@ int main(int argc,char *argv[]){
         particulas[i].h=tamano_particula;
         particulas[i].w=tamano_particula;
     }
-    SDL_Rect muralla;
-    muralla.x=DM.w; //Posicion en X
-    muralla.y=0;    //Posicion en Y
-    muralla.w=tamano_particula;    //Ancho
-    muralla.h=DM.h; //Alto
 
     SDL_Point mouse;
 
     int cambio_color = 0;
-
+    int contador_colisiones=0;
+    time_t tiempo_inicial = time(NULL);
     while(running == 1){
         while(SDL_PollEvent(&evento)){
             if(evento.type == SDL_QUIT){
@@ -339,14 +350,37 @@ int main(int argc,char *argv[]){
                 SDL_Log("Hice CLICK en (%d,%d)",mouse.x,mouse.y);
             }
         }
+        SDL_Color colorTexto = {255 + cambio_color, 255 + cambio_color, 255 + cambio_color, 255};
 
-        //Impresion en la ventana
+        //Se actualiza la surface del texto
+        char texto_colisiones[30];
+        sprintf(texto_colisiones,"Colisiones: %d",contador_colisiones);
+        texto = TTF_RenderText_Solid(font,texto_colisiones,colorTexto);
+
+        //Se actualiza la surface del tiempo transcurrido
+        char texto_tiempo[30];
+        time_t tiempo_actual = time(NULL);
+        time_t tiempo_que_paso = tiempo_actual - tiempo_inicial;
+        sprintf(texto_tiempo,"Tiempo transcurrido: %ld",(long int)tiempo_que_paso);
+        tiempo_transcurrido = TTF_RenderText_Solid(font,texto_tiempo,colorTexto);
+
+        //Limpia la ventana
         SDL_FillRect(screen_surface, NULL, SDL_MapRGB(screen_surface->format, 255 + cambio_color, 120 + cambio_color, 25 + cambio_color));
+        
+        //Se agregan las particulas a la pantalla
         for(int i=0;i<cantidad_particulas;i++){
             SDL_FillRect(screen_surface, &particulas[i], SDL_MapRGB(screen_surface->format, 0 + cambio_color, 255 + cambio_color, 0 + cambio_color));
         }
-        SDL_FillRect(screen_surface, &muralla, SDL_MapRGB(screen_surface->format, 0, 0, 0));
+
+        //Se agrega el Texto a la pantalla
+        SDL_Rect cuadro_texto={0,30};
+        SDL_Rect cuadro_tiempo_transcurrido={0,0};
+        SDL_BlitSurface(texto, NULL, screen_surface, &cuadro_texto);
+        SDL_BlitSurface(tiempo_transcurrido, NULL, screen_surface, &cuadro_tiempo_transcurrido);
+        
+        //Se imprime la pantalla
         SDL_UpdateWindowSurface(ventana);
+
         //Calculo de la siguiente posicion y actualizacion de valores particulas
         for(int i=0;i<cantidad_particulas;i++){
             //Colicion con algun borde de la ventana
@@ -439,6 +473,7 @@ int main(int argc,char *argv[]){
                             // Reproducir sonido de golpe
                             Mix_PlayChannel(1,sonido_golpe, 0);
                             cambio_color+= 4;
+                            contador_colisiones++;
                         }
                     }
                 }
@@ -451,11 +486,14 @@ int main(int argc,char *argv[]){
     //Liberacion de la memoria usada en el programa
     free(particulas);
     //Destruccion de la ventana y cierre de SDL
+    TTF_CloseFont(font);
+    SDL_FreeSurface(texto);
     SDL_FreeSurface(screen_surface);
     SDL_DestroyWindow(ventana);
     Mix_FreeChunk(sonido_fondo);
     Mix_FreeChunk(sonido_golpe);
     Mix_CloseAudio();
+    TTF_Quit();
     SDL_Quit();
 
     return 0;

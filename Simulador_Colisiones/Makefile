@@ -1,6 +1,6 @@
 ifeq ($(OS),Windows_NT)
 	CFLAGS = -Iinclude -Llib -Wall
-	LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_mixer -lm -g
+	LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_mixer -lSDL2_ttf -lm -g
 else
 	CFLAGS = -Iinclude -Llib
 	LDFLAGS = -lSDL2main -lSDL2 -lm
