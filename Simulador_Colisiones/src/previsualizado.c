@@ -18,6 +18,9 @@
 #define modulo_direccion 8
 #define modulo_peso 11
 #define tamano_particula 30
+#define particulas_maximas 25
+#define delay_maximo 20
+#define volumen_fondo 4     //Maximo dividido por este numero
 
 
 char* ingreso_string(){                                     //Getline casero
@@ -267,6 +270,7 @@ int main(int argc,char *argv[]){
         SDL_Log("Incapaz de inicializar SDL: %s", SDL_GetError());
         return 1;
     }
+
     //Configuracion Audio
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) < 0) {
         printf("Error al inicializar SDL_mixer: %s\n", Mix_GetError());
@@ -274,11 +278,13 @@ int main(int argc,char *argv[]){
     }
     Mix_Chunk *sonido_fondo = Mix_LoadWAV("assets/Sonido_Fondo.mp3");
     Mix_Chunk *sonido_golpe = Mix_LoadWAV("assets/right-cross-cross.mp3");
-    if (!sonido_golpe || !sonido_fondo) {
-        printf("Error al cargar el archivo de audio: %s\n", Mix_GetError());
+    Mix_Chunk *sonido_pared = Mix_LoadWAV("assets/sonido_colision_pared.mp3");
+    if (!sonido_golpe || !sonido_fondo || !sonido_pared) {
+        printf("Error al cargar los archivos de audio: %s\n", Mix_GetError());
         return -1;
     }
-    Mix_PlayChannel(0,sonido_fondo, -1);
+    Mix_PlayChannel(0,sonido_fondo, -1);      //Reproduce el sonido de fondo
+    Mix_VolumeChunk(sonido_fondo,MIX_MAX_VOLUME/volumen_fondo);
     //Inicializo SDL_TTF
     if (TTF_Init() != 0) {
         printf("Error al inicializar SDL_ttf: %s\n", TTF_GetError());
@@ -324,10 +330,10 @@ int main(int argc,char *argv[]){
     int DELAY=0;        //Controla el Delay de la pantalla
     while(running == 1){
         while(SDL_PollEvent(&evento)){
-            if(evento.type == SDL_QUIT){
+            if(evento.type == SDL_QUIT){    //Si se aprieta la X de la ventana para salir
                 running = 0;
             }
-            if(evento.type == SDL_KEYDOWN){
+            if(evento.type == SDL_KEYDOWN){     //Si se aprieta una tecla
                 SDL_Keycode key = evento.key.keysym.sym;
                 if(key == SDLK_ESCAPE){
                     running =0;
@@ -336,7 +342,7 @@ int main(int argc,char *argv[]){
                     guardado(particulas,cantidad_particulas);
                 }
                 else if(key == SDLK_m){
-                    if(cantidad_particulas < 20){   //El limite de pariculas en pantalla es de 20
+                    if(cantidad_particulas < particulas_maximas){   //El limite de pariculas en pantalla es de 20
                         particulas = crear_particula(particulas,&cantidad_particulas,DM);
                     }
                 }
@@ -346,7 +352,7 @@ int main(int argc,char *argv[]){
                     }
                 }
                 else if(key == SDLK_t){
-                    if(DELAY < 100){    //Solo se puede colocar un DELAY maximo de 100
+                    if(DELAY < delay_maximo){    //Solo se puede colocar un DELAY maximo de 100
                         DELAY++;
                     }
                 }
@@ -359,12 +365,13 @@ int main(int argc,char *argv[]){
                     contador_colisiones=0;
                 }
             }
-            if(evento.type == SDL_MOUSEBUTTONDOWN){
+            if(evento.type == SDL_MOUSEBUTTONDOWN){ //Si se clickea con el mause
                 mouse.x = evento.button.x;
                 mouse.y = evento.button.y;
                 SDL_Log("Hice CLICK en (%d,%d)",mouse.x,mouse.y);
             }
         }
+        
         SDL_Color colorTexto = {255 + cambio_color, 255 + cambio_color, 255 + cambio_color, 255};
 
         //Se actualiza la surface del texto
@@ -423,6 +430,7 @@ int main(int argc,char *argv[]){
                 else if(particulas[i].d == 5){
                     particulas[i].d= 7;
                 }
+                Mix_PlayChannel(2,sonido_pared, 0);
             }
             if(particulas[i].x >= DM.w-tamano_particula){   //Borde Derecho
                 if(particulas[i].d == 7){
@@ -434,6 +442,7 @@ int main(int argc,char *argv[]){
                 else if(particulas[i].d == 1){
                     particulas[i].d= 3;
                 }
+                Mix_PlayChannel(2,sonido_pared, 0);
             }
             if(particulas[i].y <= 0){                       //Borde Superior
                 if(particulas[i].d == 1){
@@ -445,6 +454,7 @@ int main(int argc,char *argv[]){
                 else if(particulas[i].d == 3){
                     particulas[i].d= 5;
                 }
+                Mix_PlayChannel(2,sonido_pared, 0);
             }
             if(particulas[i].y >= DM.h-tamano_particula){   //Borde Inferior
                 if(particulas[i].d == 7){
@@ -456,6 +466,7 @@ int main(int argc,char *argv[]){
                 else if(particulas[i].d == 5){
                     particulas[i].d= 3;
                 }
+                Mix_PlayChannel(2,sonido_pared, 0);
             }
             
             //Colicion con otra particula
