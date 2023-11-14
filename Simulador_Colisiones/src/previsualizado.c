@@ -22,6 +22,43 @@
 #define delay_maximo 20
 #define volumen_fondo 4     //Maximo dividido por este numero
 
+//Estructura en que se guardaran los recursos necesarios para imprimir en pantalla
+typedef struct {
+
+    //Valores para el sonido
+    Mix_Chunk *sonido_fondo;
+    Mix_Chunk *sonido_golpe;
+    Mix_Chunk *sonido_pared;
+
+    //Variable para la fuente del texto
+    TTF_Font *font;
+
+    //Surfaces para imprimir en pantalla
+    SDL_Surface *surface_colisiones;
+    SDL_Surface *tiempo_transcurrido;
+    SDL_Surface *delay;
+    SDL_Surface *contador;
+    SDL_Surface *screen_surface;
+
+    //Variable de la ventana donde se imprimira
+    SDL_Window *ventana;
+
+    //Variable de la Dimencion de la Pantalla
+    SDL_DisplayMode DM;
+
+    //Variable para registrar los eventos
+    SDL_Event evento;
+
+    //Variable para registrar las acciones del mouse
+    SDL_Point mouse;
+
+    //Variables extras
+    int contador_colisiones;        //Registra las cantidades de colisiones
+    time_t tiempo_inicial;          //Registra el momento en que se inicio el programa
+    int DELAY;                      //Controla el Delay de la pantalla
+    
+} recursos;
+
 
 char* ingreso_string(){                                     //Getline casero
     printf("%sIngrese la direccion de su archivo: %s\n",BOLD,NORMAL);
