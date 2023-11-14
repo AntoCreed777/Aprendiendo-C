@@ -259,12 +259,7 @@ SDL_Rect* destruir_particula(SDL_Rect *particulas, int *cantidad_particulas){
     return particulas;
 }
 
-int main(int argc,char *argv[]){
-    int cantidad_particulas=0;                                          //Guarda la cantidad de particulas ingresados
-    SDL_Rect *particulas=cuerpo_lectura(&cantidad_particulas);          //Array en donde se guardaran los datos
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////// FIN LECTURA ///////////INICIO VISUALIZACION/////////// Y-O MOVIMIENTO ////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+int inicializado_SDL2(){
     //Inicializacion de SDL
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0){
         SDL_Log("Incapaz de inicializar SDL: %s", SDL_GetError());
@@ -274,8 +269,28 @@ int main(int argc,char *argv[]){
     //Configuracion Audio
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) < 0) {
         printf("Error al inicializar SDL_mixer: %s\n", Mix_GetError());
-        return -1;
+        SDL_Quit();
+        return 1;
     }
+
+    //Inicializo SDL_TTF
+    if (TTF_Init() != 0) {
+        printf("Error al inicializar SDL_ttf: %s\n", TTF_GetError());
+        Mix_CloseAudio();
+        SDL_Quit();
+        return 1;
+    }
+    return 0;
+}
+
+int main(int argc,char *argv[]){
+    int cantidad_particulas=0;                                          //Guarda la cantidad de particulas ingresados
+    SDL_Rect *particulas=cuerpo_lectura(&cantidad_particulas);          //Array en donde se guardaran los datos
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////// FIN LECTURA ///////////INICIO VISUALIZACION/////////// Y-O MOVIMIENTO ////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    if(inicializado_SDL2() == 1){free(particulas);return 0;}
+
     Mix_Chunk *sonido_fondo = Mix_LoadWAV("assets/Sonido_Fondo.mp3");
     Mix_Chunk *sonido_golpe = Mix_LoadWAV("assets/right-cross-cross.mp3");
     Mix_Chunk *sonido_pared = Mix_LoadWAV("assets/sonido_colision_pared.mp3");
@@ -285,12 +300,7 @@ int main(int argc,char *argv[]){
     }
     Mix_PlayChannel(0,sonido_fondo, -1);      //Reproduce el sonido de fondo
     Mix_VolumeChunk(sonido_fondo,MIX_MAX_VOLUME/volumen_fondo);
-    //Inicializo SDL_TTF
-    if (TTF_Init() != 0) {
-        printf("Error al inicializar SDL_ttf: %s\n", TTF_GetError());
-        SDL_Quit();
-        return -1;
-    }
+
 
     //Creacion del Texto
     TTF_Font *font;
