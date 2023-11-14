@@ -192,6 +192,12 @@ SDL_Rect* cuerpo_lectura(int *cantidad_particulas){
     /*for(int i=0;i<(*cantidad_particulas);i++){
         printf("%s%s%u\t%u\t%u\t%u%s\n",BOLD,BLUE,particulas[i].x,particulas[i].y,particulas[i].d,particulas[i].p,NORMAL);
     }*/
+
+    for(int i=0;i<(*cantidad_particulas);i++){ //Le doy dimencion a las particulas
+        particulas[i].h=tamano_particula;
+        particulas[i].w=tamano_particula;
+    }
+
     return particulas;
 }
 
@@ -327,17 +333,15 @@ int main(int argc,char *argv[]){
     int running = 1;
     SDL_Event evento;
 
-    for(int i=0;i<cantidad_particulas;i++){ //Le doy dimencion a las particulas
-        particulas[i].h=tamano_particula;
-        particulas[i].w=tamano_particula;
-    }
-
     SDL_Point mouse;
 
-    int cambio_color = 0;
     int contador_colisiones=0;
     time_t tiempo_inicial = time(NULL);
     int DELAY=0;        //Controla el Delay de la pantalla
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     while(running == 1){
         while(SDL_PollEvent(&evento)){
             if(evento.type == SDL_QUIT){    //Si se aprieta la X de la ventana para salir
@@ -382,7 +386,7 @@ int main(int argc,char *argv[]){
             }
         }
         
-        SDL_Color colorTexto = {255 + cambio_color, 255 + cambio_color, 255 + cambio_color, 255};
+        SDL_Color colorTexto = {250, 170, 50, 255};
 
         //Se actualiza la surface del texto
         char texto_colisiones[30];
@@ -407,11 +411,11 @@ int main(int argc,char *argv[]){
         contador = TTF_RenderText_Solid(font,texto_contador,colorTexto);
 
         //Limpia la ventana
-        SDL_FillRect(screen_surface, NULL, SDL_MapRGB(screen_surface->format, 255 + cambio_color, 120 + cambio_color, 25 + cambio_color));
+        SDL_FillRect(screen_surface, NULL, SDL_MapRGB(screen_surface->format, 0, 0, 0));
         
         //Se agregan las particulas a la pantalla
         for(int i=0;i<cantidad_particulas;i++){
-            SDL_FillRect(screen_surface, &particulas[i], SDL_MapRGB(screen_surface->format, 0 + cambio_color, 255 + cambio_color, 0 + cambio_color));
+            SDL_FillRect(screen_surface, &particulas[i], SDL_MapRGB(screen_surface->format, 240, 50, 250));
         }
 
         //Se agrega el Texto a la pantalla
@@ -537,7 +541,6 @@ int main(int argc,char *argv[]){
 
                         // Reproducir sonido de golpe
                         Mix_PlayChannel(1,sonido_golpe, 0);
-                        cambio_color+= 4;
                         contador_colisiones++;
                         switch (particulas[j].d)    //Los desplazo un espacio extra
                         {
