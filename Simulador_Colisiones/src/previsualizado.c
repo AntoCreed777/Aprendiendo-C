@@ -17,7 +17,7 @@
 #define CARACTERESMAXIMOS 100000
 #define modulo_direccion 8
 #define modulo_peso 11
-#define tamano_particula 30
+#define tamano_particula 100
 #define particulas_maximas 25
 #define delay_maximo 20
 #define volumen_fondo 4     //Maximo dividido por este numero
@@ -161,7 +161,7 @@ SDL_Rect* cuerpo_lectura(int *cantidad_particulas){
     if(tamano_archivo==0){                      //Verifico que el archivo no se encuentre vacio
         printf("%s%sError: El archivo se encuentra vacio%s",BOLD,BLUE,NORMAL);
         fclose(entrada);
-        return 0;
+        exit(0);
     }
     else{
         tipo_entrada=fgetc(entrada);       //Obtengo que tipo de entrada es (c=CSV,t=txt,b=binario)
@@ -430,6 +430,9 @@ int main(int argc,char *argv[]){
                 else if(particulas[i].d == 5){
                     particulas[i].d= 7;
                 }
+                else{
+                    particulas[i].d= 0;
+                }
                 Mix_PlayChannel(2,sonido_pared, 0);
             }
             if(particulas[i].x >= DM.w-tamano_particula){   //Borde Derecho
@@ -441,6 +444,9 @@ int main(int argc,char *argv[]){
                 }
                 else if(particulas[i].d == 1){
                     particulas[i].d= 3;
+                }
+                else{
+                    particulas[i].d= 4;
                 }
                 Mix_PlayChannel(2,sonido_pared, 0);
             }
@@ -454,6 +460,9 @@ int main(int argc,char *argv[]){
                 else if(particulas[i].d == 3){
                     particulas[i].d= 5;
                 }
+                else{
+                    particulas[i].d= 6;
+                }
                 Mix_PlayChannel(2,sonido_pared, 0);
             }
             if(particulas[i].y >= DM.h-tamano_particula){   //Borde Inferior
@@ -465,6 +474,9 @@ int main(int argc,char *argv[]){
                 }
                 else if(particulas[i].d == 5){
                     particulas[i].d= 3;
+                }
+                else{
+                    particulas[i].d= 2;
                 }
                 Mix_PlayChannel(2,sonido_pared, 0);
             }
