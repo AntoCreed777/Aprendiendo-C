@@ -17,8 +17,8 @@
 #define CARACTERESMAXIMOS 100000
 #define modulo_direccion 8
 #define modulo_peso 11
-#define tamano_particula 200
-#define particulas_maximas 100
+#define tamano_particula 5
+#define particulas_maximas 2000
 #define volumen_fondo 2     //Maximo dividido por este numero
 
 //Estructura en que se guardaran los recursos necesarios para correr el programa
@@ -454,27 +454,36 @@ void guardado(SDL_Rect *particulas,int cantidad_particulas){
 }
 
 SDL_Rect* crear_particula(SDL_Rect *particulas, int *cantidad_particulas,SDL_DisplayMode Dimencion){
-    (*cantidad_particulas)++;
-    particulas=(SDL_Rect*)realloc(particulas,sizeof(SDL_Rect)*(*cantidad_particulas));
-    int x,y,colision=0;
-    while(1){
+    int x,y,colision=0,intentos=2000;
+    while(intentos>0){
         x=rand()%(Dimencion.w-tamano_particula);    //Obtengo la posicion en X
         y=rand()%(Dimencion.h-tamano_particula);    //Obtengo la posicion en Y
         for(int i=0;i<(*cantidad_particulas);i++){      //Recorro cada particula
-            if((x <= particulas[i].x+tamano_particula && x >= particulas[i].x && y <= particulas[i].y+tamano_particula && y >= particulas[i].y) ||    //Vertice superior izquierdo
-                (x+tamano_particula <= particulas[i].x+tamano_particula && x+tamano_particula >= particulas[i].x &&                                  //Vertice inferior derecho
+            if((x <= particulas[i].x+tamano_particula && x >= particulas[i].x && y <= particulas[i].y+tamano_particula && y >= particulas[i].y) ||      //Vertice superior izquierdo
+
+                (x+tamano_particula <= particulas[i].x+tamano_particula && x+tamano_particula >= particulas[i].x &&                                     //Vertice inferior derecho
+                y+tamano_particula <= particulas[i].y+tamano_particula && y+tamano_particula >= particulas[i].y) ||
+
+                (x+tamano_particula <= particulas[i].x+tamano_particula && x+tamano_particula >= particulas[i].x &&                                     //Vertice superior derecho
+                y <= particulas[i].y+tamano_particula && y >= particulas[i].y) ||
+                
+                (x <= particulas[i].x+tamano_particula && x >= particulas[i].x &&                                                                       //Vertice inferior izquierdo
                 y+tamano_particula <= particulas[i].y+tamano_particula && y+tamano_particula >= particulas[i].y)){
+
                 colision=1; //Si hay una particula
                 break;      //Sale del for
             }
         }
         if(!colision){
+            (*cantidad_particulas)++;
+            particulas=(SDL_Rect*)realloc(particulas,sizeof(SDL_Rect)*(*cantidad_particulas));
             particulas[(*cantidad_particulas)-1].x=x;
             particulas[(*cantidad_particulas)-1].y=y;
             break;
         }
+        intentos--;
     }
-
+    if(intentos == 0){printf("No se pudo encontrar una ubicacion para la particula\n");return particulas;}
     int d=rand()%modulo_direccion;
     asignacion_direcciones(&particulas[(*cantidad_particulas)-1],d);
 
@@ -583,13 +592,14 @@ void visualizacion(SDL_Rect *particulas, Recursos *recursos, int cantidad_partic
 }
 
 //Funciones que tienen que ver con las colisiones
-void deteccion_colision_borde(SDL_Rect *particula, Recursos *recursos) {  //Colicion con algun borde de la ventana
+int deteccion_colision_borde(SDL_Rect *particula, Recursos *recursos) {  //Colicion con algun borde de la ventana
     if(particula->x < 0 || particula->x > recursos->DM.w-tamano_particula){                       //Borde Izquierdo o Derecho
         particula->dx*=-1;
         if(particula->y < 0 || particula->y > recursos->DM.h-tamano_particula){
             particula->dy*=-1;
         }
         Mix_PlayChannel(2,recursos->sonido_pared, 0);
+        return 1;
     }
     if(particula->y < 0 || particula->y > recursos->DM.h-tamano_particula){                       //Borde Superior o Inferior
         particula->dy*=-1;
@@ -597,7 +607,9 @@ void deteccion_colision_borde(SDL_Rect *particula, Recursos *recursos) {  //Coli
             particula->dx*=-1;
         }
         Mix_PlayChannel(2,recursos->sonido_pared, 0);
+        return 1;
     }
+    return 0;
 }
 
 void colision_particulas(SDL_Rect *particula1, SDL_Rect *particula2, Recursos *recursos) {
@@ -650,8 +662,7 @@ void movimiento_particula(SDL_Rect *particula){
 
 void colisiones(Recursos *recursos, SDL_Rect *particulas, int cantidad_particulas) {
     for (int i = 0; i < cantidad_particulas; i++) {
-        deteccion_colision_borde(&particulas[i], recursos);
-
+        int pared = deteccion_colision_borde(&particulas[i], recursos);
         for (int j = 0; j < cantidad_particulas; j++) {
             if (i != j && particulas[i].p<=particulas[j].p) {
                 if(SDL_HasIntersection(&particulas[i], &particulas[j])){
@@ -661,8 +672,7 @@ void colisiones(Recursos *recursos, SDL_Rect *particulas, int cantidad_particula
                     // Reproducir sonido de golpe
                     Mix_PlayChannel(1,recursos->sonido_golpe, 0);
                     recursos->contador_colisiones++;
-
-                    movimiento_particula(&particulas[i]);
+                    if(pared)movimiento_particula(&particulas[i]);
                 }
             }
         }
