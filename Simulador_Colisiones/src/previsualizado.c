@@ -22,7 +22,7 @@
 #define delay_maximo 20
 #define volumen_fondo 2     //Maximo dividido por este numero
 
-//Estructura en que se guardaran los recursos necesarios para imprimir en pantalla
+//Estructura en que se guardaran los recursos necesarios para correr el programa
 typedef struct {
 
     //Valores para el sonido
@@ -280,7 +280,9 @@ SDL_Rect* crear_particula(SDL_Rect *particulas, int *cantidad_particulas,SDL_Dis
         x=rand()%(Dimencion.w-tamano_particula);    //Obtengo la posicion en X
         y=rand()%(Dimencion.h-tamano_particula);    //Obtengo la posicion en Y
         for(int i=0;i<(*cantidad_particulas);i++){      //Recorro cada particula
-            if(x <= particulas[i].x+tamano_particula && x >= particulas[i].x && y <= particulas[i].y+tamano_particula && y >= particulas[i].y){
+            if((x <= particulas[i].x+tamano_particula && x >= particulas[i].x && y <= particulas[i].y+tamano_particula && y >= particulas[i].y) ||    //Vertice superior izquierdo
+                (x+tamano_particula <= particulas[i].x+tamano_particula && x+tamano_particula >= particulas[i].x &&                                  //Vertice inferior derecho
+                y+tamano_particula <= particulas[i].y+tamano_particula && y+tamano_particula >= particulas[i].y)){
                 colision=1; //Si hay una particula
                 break;      //Sale del for
             }
@@ -407,6 +409,21 @@ int inicializado_de_recursos(Recursos *recursos) {
     recursos->DELAY = 0;
 
     return 0; // Exito al inicializar los recursos 
+}
+
+void finalizacion_de_recursos(SDL_Rect *particulas,Recursos *recursos){
+    //Liberacion de la memoria usada en el programa
+    free(particulas);
+    //Destruccion de la ventana y cierre de SDL
+    TTF_CloseFont(recursos->font);
+    SDL_FreeSurface(recursos->surface_colisiones);
+    SDL_FreeSurface(recursos->screen_surface);
+    SDL_DestroyWindow(recursos->ventana);
+    Mix_FreeChunk(recursos->sonido_fondo);
+    Mix_FreeChunk(recursos->sonido_golpe);
+    Mix_CloseAudio();
+    TTF_Quit();
+    SDL_Quit();
 }
 
 SDL_Rect* control_de_eventos(Recursos *recursos,int *cantidad_particulas,SDL_Rect *particulas){
@@ -702,23 +719,12 @@ int main(int argc,char *argv[]){
 
         //Calculo de la siguiente posicion y actualizacion de las direcciones de las particulas
         colisiones(&recursos,particulas,cantidad_particulas);
-        
+
         //Aplicaciondel DELAY que desee el usuario (Se modifica en la parte de los eventos)
         SDL_Delay(recursos.DELAY);
     }
-
-    //Liberacion de la memoria usada en el programa
-    free(particulas);
-    //Destruccion de la ventana y cierre de SDL
-    TTF_CloseFont(recursos.font);
-    SDL_FreeSurface(recursos.surface_colisiones);
-    SDL_FreeSurface(recursos.screen_surface);
-    SDL_DestroyWindow(recursos.ventana);
-    Mix_FreeChunk(recursos.sonido_fondo);
-    Mix_FreeChunk(recursos.sonido_golpe);
-    Mix_CloseAudio();
-    TTF_Quit();
-    SDL_Quit();
+    
+    finalizacion_de_recursos(particulas,&recursos);
 
     return 0;
 }
