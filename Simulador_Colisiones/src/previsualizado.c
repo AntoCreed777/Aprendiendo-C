@@ -17,7 +17,7 @@
 #define CARACTERESMAXIMOS 100000
 #define modulo_direccion 8
 #define modulo_peso 11
-#define tamano_particula 100
+#define tamano_particula 40
 #define particulas_maximas 25
 #define delay_maximo 20
 #define volumen_fondo 2     //Maximo dividido por este numero
@@ -484,7 +484,7 @@ void visualizacion(SDL_Rect *particulas,Recursos *recursos,int cantidad_particul
     //Se actualiza la surface del tiempo transcurrido
     recursos->tiempo_actual = time(NULL);
     recursos->tiempo_que_paso = recursos->tiempo_actual - recursos->tiempo_inicial;
-    sprintf(recursos->texto_tiempo,"Tiempo transcurrido: %ld",(long int)recursos->tiempo_que_paso);
+    sprintf(recursos->texto_tiempo,"Tiempo transcurrido: %d",(int)recursos->tiempo_que_paso);
     recursos->tiempo_transcurrido = TTF_RenderText_Solid(recursos->font,recursos->texto_tiempo,recursos->colorTexto);
     
     // Se actualiza la superficie del Delay
@@ -513,184 +513,168 @@ void visualizacion(SDL_Rect *particulas,Recursos *recursos,int cantidad_particul
     SDL_UpdateWindowSurface(recursos->ventana);
 }
 
-void colisiones(Recursos *recursos,SDL_Rect *particulas,int cantidad_particulas){
-    for(int i=0;i<cantidad_particulas;i++){
-        //Colicion con algun borde de la ventana
-        if(particulas[i].x <= 0){                       //Borde Izquierdo
-            if(particulas[i].d == 3){
-                particulas[i].d= 1;
-            }
-            else if(particulas[i].d == 4){
-                particulas[i].d= 0;
-            }
-            else if(particulas[i].d == 5){
-                particulas[i].d= 7;
-            }
-            else{
-                particulas[i].d= 0;
-            }
-            Mix_PlayChannel(2,recursos->sonido_pared, 0);
+void deteccion_colision_borde(SDL_Rect *particula, Recursos *recursos) {  //Colicion con algun borde de la ventana
+    if(particula->x <= 0){                       //Borde Izquierdo
+        if(particula->d == 3){
+            particula->d= 1;
         }
-        if(particulas[i].x >= recursos->DM.w-tamano_particula){   //Borde Derecho
-            if(particulas[i].d == 7){
-                particulas[i].d= 5;
-            }
-            else if(particulas[i].d == 0){
-                particulas[i].d= 4;
-            }
-            else if(particulas[i].d == 1){
-                particulas[i].d= 3;
-            }
-            else{
-                particulas[i].d= 4;
-            }
-            Mix_PlayChannel(2,recursos->sonido_pared, 0);
+        else if(particula->d == 4){
+            particula->d= 0;
         }
-        if(particulas[i].y <= 0){                       //Borde Superior
-            if(particulas[i].d == 1){
-                particulas[i].d= 7;
-            }
-            else if(particulas[i].d == 2){
-                particulas[i].d= 6;
-            }
-            else if(particulas[i].d == 3){
-                particulas[i].d= 5;
-            }
-            else{
-                particulas[i].d= 6;
-            }
-            Mix_PlayChannel(2,recursos->sonido_pared, 0);
+        else if(particula->d == 5){
+            particula->d= 7;
         }
-        if(particulas[i].y >= recursos->DM.h-tamano_particula){   //Borde Inferior
-            if(particulas[i].d == 7){
-                particulas[i].d= 1;
-            }
-            else if(particulas[i].d == 6){
-                particulas[i].d= 2;
-            }
-            else if(particulas[i].d == 5){
-                particulas[i].d= 3;
-            }
-            else{
-                particulas[i].d= 2;
-            }
-            Mix_PlayChannel(2,recursos->sonido_pared, 0);
+        else{
+            particula->d= 0;
         }
-        
-        //Colicion con otra particula
-        for(int j=0;j<cantidad_particulas;j++){ //Recorro las particulas
-            for(int k=0;k<cantidad_particulas;k++){ //Recorro las particulas menos la de la J
-                if(SDL_HasIntersection(&particulas[j],&particulas[k]) && j!=k && particulas[j].p<=particulas[k].p){ //Si se intersectan 
-                    SDL_Rect interseccion;
-                    int aux_direccion, arriba=0,abajo=0,izquierda=0,derecha=0;
-                    SDL_IntersectRect(&particulas[j], &particulas[k], &interseccion);              //Extraigo la interseccion
+        Mix_PlayChannel(2,recursos->sonido_pared, 0);
+    }
+    if(particula->x >= recursos->DM.w-tamano_particula){   //Borde Derecho
+        if(particula->d == 7){
+            particula->d= 5;
+        }
+        else if(particula->d == 0){
+            particula->d= 4;
+        }
+        else if(particula->d == 1){
+            particula->d= 3;
+        }
+        else{
+            particula->d= 4;
+        }
+        Mix_PlayChannel(2,recursos->sonido_pared, 0);
+    }
+    if(particula->y <= 0){                       //Borde Superior
+        if(particula->d == 1){
+            particula->d= 7;
+        }
+        else if(particula->d == 2){
+            particula->d= 6;
+        }
+        else if(particula->d == 3){
+            particula->d= 5;
+        }
+        else{
+            particula->d= 6;
+        }
+        Mix_PlayChannel(2,recursos->sonido_pared, 0);
+    }
+    if(particula->y >= recursos->DM.h-tamano_particula){   //Borde Inferior
+        if(particula->d == 7){
+            particula->d= 1;
+        }
+        else if(particula->d == 6){
+            particula->d= 2;
+        }
+        else if(particula->d == 5){
+            particula->d= 3;
+        }
+        else{
+            particula->d= 2;
+        }
+        Mix_PlayChannel(2,recursos->sonido_pared, 0);
+    }
+}
 
-                    //Detecto donde se transpazo el limite de la particula
-                    if(interseccion.y == particulas[j].y){                                         // La intersección esta en la parte superior de la particula
-                        arriba=1;
-                    }
-                    if(interseccion.y + interseccion.h == particulas[j].y + particulas[j].h){      //La interseccion esta en la parte inferior de la particula
-                        abajo=1;
-                    }
-                    if(interseccion.x == particulas[j].x){                                         //La interseccion esta en la parte izquierda de la particula
-                        izquierda=1;
-                    }
-                    if(interseccion.x + interseccion.w == particulas[j].x + particulas[j].w){      //La interseccion esta en la parte derecha de la particula
-                        derecha=1;
-                    }
+void colision_particulas(SDL_Rect *particula1, SDL_Rect *particula2, Recursos *recursos) {
+    SDL_Rect interseccion;
+    int aux_direccion, arriba=0,abajo=0,izquierda=0,derecha=0;
+    SDL_IntersectRect(particula1, particula2, &interseccion);              //Extraigo la interseccion
 
-                    if(arriba == 1 && izquierda == 1){
-                        do{
-                            aux_direccion=rand()%modulo_direccion;
-                        }while(aux_direccion == 2 || aux_direccion == 3 || aux_direccion == 4);
-                    }
-                    else if(arriba == 1 && derecha == 1){
-                        do{
-                            aux_direccion=rand()%modulo_direccion;
-                        }while(aux_direccion == 0 ||aux_direccion == 1 || aux_direccion == 2);
-                    }
-                    else if(abajo == 1 && derecha == 1){
-                        do{
-                            aux_direccion=rand()%modulo_direccion;
-                        }while(aux_direccion == 0 ||aux_direccion == 7 || aux_direccion == 6);
-                    }
-                    else if(abajo == 1 && izquierda == 1){
-                        do{
-                            aux_direccion=rand()%modulo_direccion;
-                        }while(aux_direccion == 4 ||aux_direccion == 5 || aux_direccion == 6);
-                    }
-                    particulas[j].d=aux_direccion;
+    //Detecto donde se transpazo el limite de la particula
+    if(interseccion.y == particula1->y){                                         // La intersección esta en la parte superior de la particula
+        arriba=1;
+    }
+    if(interseccion.y + interseccion.h == particula1->y + particula1->h){      //La interseccion esta en la parte inferior de la particula
+        abajo=1;
+    }
+    if(interseccion.x == particula1->x){                                         //La interseccion esta en la parte izquierda de la particula
+        izquierda=1;
+    }
+    if(interseccion.x + interseccion.w == particula1->x + particula1->w){      //La interseccion esta en la parte derecha de la particula
+        derecha=1;
+    }
 
-                    // Reproducir sonido de golpe
-                    Mix_PlayChannel(1,recursos->sonido_golpe, 0);
-                    recursos->contador_colisiones++;
-                    switch (particulas[j].d)    //Los desplazo un espacio extra
-                    {
-                    case 0: //Derecha
-                        particulas[j].x++ ;    //X
-                        break;
-                    case 1: //Derecha Arriba
-                        particulas[j].x++ ;    //X
-                        particulas[j].y-- ;    //Y
-                        break;
-                    case 2: //Arriba
-                        particulas[j].y-- ;    //Y
-                        break;
-                    case 3: //Arriba Izquierda
-                        particulas[j].x-- ;    //X
-                        particulas[j].y-- ;    //Y
-                        break;
-                    case 4: //Izquierda
-                        particulas[j].x-- ;    //X
-                        break;
-                    case 5: //Izquierda Abajo
-                        particulas[j].x-- ;    //X
-                        particulas[j].y++ ;    //Y
-                        break;
-                    case 6: //Abajo
-                        particulas[j].y++ ;    //Y
-                        break;
-                    case 7: //Abajo Derevha
-                        particulas[j].x++ ;    //X
-                        particulas[j].y++ ;    //Y
-                        break;
-                    }
-                }
+    if(arriba == 1 && izquierda == 1){
+        do{
+            aux_direccion=rand()%modulo_direccion;
+        }while(aux_direccion == 2 || aux_direccion == 3 || aux_direccion == 4);
+    }
+    else if(arriba == 1 && derecha == 1){
+        do{
+            aux_direccion=rand()%modulo_direccion;
+        }while(aux_direccion == 0 ||aux_direccion == 1 || aux_direccion == 2);
+    }
+    else if(abajo == 1 && derecha == 1){
+        do{
+            aux_direccion=rand()%modulo_direccion;
+        }while(aux_direccion == 0 ||aux_direccion == 7 || aux_direccion == 6);
+    }
+    else if(abajo == 1 && izquierda == 1){
+        do{
+            aux_direccion=rand()%modulo_direccion;
+        }while(aux_direccion == 4 ||aux_direccion == 5 || aux_direccion == 6);
+    }
+    particula1->d=aux_direccion;
+}
+
+void movimiento_particula(SDL_Rect *particula){
+    //Movimiento +1
+    switch (particula->d)
+    {
+    case 0: //Derecha
+        particula->x++ ;    //X
+        break;
+    case 1: //Derecha Arriba
+        particula->x++ ;    //X
+        particula->y-- ;    //Y
+        break;
+    case 2: //Arriba
+        particula->y-- ;    //Y
+        break;
+    case 3: //Arriba Izquierda
+        particula->x-- ;    //X
+        particula->y-- ;    //Y
+        break;
+    case 4: //Izquierda
+        particula->x-- ;    //X
+        break;
+    case 5: //Izquierda Abajo
+        particula->x-- ;    //X
+        particula->y++ ;    //Y
+        break;
+    case 6: //Abajo
+        particula->y++ ;    //Y
+        break;
+    case 7: //Abajo Derevha
+        particula->x++ ;    //X
+        particula->y++ ;    //Y
+        break;
+    }
+}
+
+void colisiones(Recursos *recursos, SDL_Rect *particulas, int cantidad_particulas) {
+    for (int i = 0; i < cantidad_particulas; i++) {
+        deteccion_colision_borde(&particulas[i], recursos);
+
+        for (int j = 0; j < cantidad_particulas; j++) {
+            if (i != j && SDL_HasIntersection(&particulas[i], &particulas[j]) && particulas[i].p<=particulas[j].p) {
+
+                //Funcion que detecta las colisiones de las particulas
+                colision_particulas(&particulas[i], &particulas[j], recursos);
+
+                // Reproducir sonido de golpe
+                Mix_PlayChannel(1,recursos->sonido_golpe, 0);
+                recursos->contador_colisiones++;
+
+                movimiento_particula(&particulas[i]);
             }
         }
-    
-        //Movimiento +1
-        switch (particulas[i].d)
-        {
-        case 0: //Derecha
-            particulas[i].x++ ;    //X
-            break;
-        case 1: //Derecha Arriba
-            particulas[i].x++ ;    //X
-            particulas[i].y-- ;    //Y
-            break;
-        case 2: //Arriba
-            particulas[i].y-- ;    //Y
-            break;
-        case 3: //Arriba Izquierda
-            particulas[i].x-- ;    //X
-            particulas[i].y-- ;    //Y
-            break;
-        case 4: //Izquierda
-            particulas[i].x-- ;    //X
-            break;
-        case 5: //Izquierda Abajo
-            particulas[i].x-- ;    //X
-            particulas[i].y++ ;    //Y
-            break;
-        case 6: //Abajo
-            particulas[i].y++ ;    //Y
-            break;
-        case 7: //Abajo Derevha
-            particulas[i].x++ ;    //X
-            particulas[i].y++ ;    //Y
-            break;
-        }
+    }
+
+    // Movimiento +1
+    for (int i = 0; i < cantidad_particulas; i++) {
+        movimiento_particula(&particulas[i]);
     }
 }
 
