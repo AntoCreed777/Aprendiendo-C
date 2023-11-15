@@ -251,73 +251,7 @@ SDL_Rect* cuerpo_lectura(int *cantidad_particulas){
     return particulas;
 }
 
-//Funciones
-void guardado(SDL_Rect *particulas,int cantidad_particulas){
-    char nombre_carpeta[40]= "Guardado Colisionador Particulas";
-    if(access(nombre_carpeta,0) != 0){
-        mkdir(nombre_carpeta);
-    }
-
-    char nombre_archivo[55];
-    time_t tiempo;
-    tiempo=time(NULL);
-
-    sprintf(nombre_archivo, "%s/Save_%ld.txt", nombre_carpeta, (long int) tiempo);
-
-    FILE *salida = fopen(nombre_archivo,"w");
-
-    fputc('c',salida);
-    for(int i=0; i<cantidad_particulas;i++){
-        fprintf(salida,"%d;%d;%d;%d;\n",particulas[i].x,particulas[i].y,particulas[i].d,particulas[i].p);
-    }
-
-    fclose(salida);
-}
-
-SDL_Rect* crear_particula(SDL_Rect *particulas, int *cantidad_particulas,SDL_DisplayMode Dimencion){
-    (*cantidad_particulas)++;
-    particulas=(SDL_Rect*)realloc(particulas,sizeof(SDL_Rect)*(*cantidad_particulas));
-    int x,y,colision=0;
-    while(1){
-        x=rand()%(Dimencion.w-tamano_particula);    //Obtengo la posicion en X
-        y=rand()%(Dimencion.h-tamano_particula);    //Obtengo la posicion en Y
-        for(int i=0;i<(*cantidad_particulas);i++){      //Recorro cada particula
-            if((x <= particulas[i].x+tamano_particula && x >= particulas[i].x && y <= particulas[i].y+tamano_particula && y >= particulas[i].y) ||    //Vertice superior izquierdo
-                (x+tamano_particula <= particulas[i].x+tamano_particula && x+tamano_particula >= particulas[i].x &&                                  //Vertice inferior derecho
-                y+tamano_particula <= particulas[i].y+tamano_particula && y+tamano_particula >= particulas[i].y)){
-                colision=1; //Si hay una particula
-                break;      //Sale del for
-            }
-        }
-        if(!colision){
-            particulas[(*cantidad_particulas)-1].x=x;
-            particulas[(*cantidad_particulas)-1].y=y;
-            break;
-        }
-    }
-
-    int d=rand()%modulo_direccion;
-    particulas[(*cantidad_particulas)-1].d=d;
-
-    int p=rand()%modulo_peso;
-    particulas[(*cantidad_particulas)-1].p=p;
-
-    particulas[(*cantidad_particulas)-1].w=tamano_particula;
-    particulas[(*cantidad_particulas)-1].h=tamano_particula;
-
-    return particulas;
-}
-
-SDL_Rect* destruir_particula(SDL_Rect *particulas, int *cantidad_particulas){
-    int marcada=rand()%(*cantidad_particulas);
-    for(int i=(marcada+1);i<(*cantidad_particulas);i++){
-        particulas[i-1]=particulas[i];
-    }
-    (*cantidad_particulas)--;
-    particulas=(SDL_Rect*)realloc(particulas,sizeof(SDL_Rect)*(*cantidad_particulas));
-    return particulas;
-}
-
+//Funciones de inicializado y cierre
 int inicializado_SDL2(){
     //Inicializacion de SDL
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0){
@@ -432,6 +366,73 @@ void finalizacion_de_recursos_y_librerias(SDL_Rect *particulas,Recursos *recurso
     SDL_Quit();
 }
 
+//Funciones de eventos
+void guardado(SDL_Rect *particulas,int cantidad_particulas){
+    char nombre_carpeta[40]= "Guardado Colisionador Particulas";
+    if(access(nombre_carpeta,0) != 0){
+        mkdir(nombre_carpeta);
+    }
+
+    char nombre_archivo[55];
+    time_t tiempo;
+    tiempo=time(NULL);
+
+    sprintf(nombre_archivo, "%s/Save_%ld.txt", nombre_carpeta, (long int) tiempo);
+
+    FILE *salida = fopen(nombre_archivo,"w");
+
+    fputc('c',salida);
+    for(int i=0; i<cantidad_particulas;i++){
+        fprintf(salida,"%d;%d;%d;%d;\n",particulas[i].x,particulas[i].y,particulas[i].d,particulas[i].p);
+    }
+
+    fclose(salida);
+}
+
+SDL_Rect* crear_particula(SDL_Rect *particulas, int *cantidad_particulas,SDL_DisplayMode Dimencion){
+    (*cantidad_particulas)++;
+    particulas=(SDL_Rect*)realloc(particulas,sizeof(SDL_Rect)*(*cantidad_particulas));
+    int x,y,colision=0;
+    while(1){
+        x=rand()%(Dimencion.w-tamano_particula);    //Obtengo la posicion en X
+        y=rand()%(Dimencion.h-tamano_particula);    //Obtengo la posicion en Y
+        for(int i=0;i<(*cantidad_particulas);i++){      //Recorro cada particula
+            if((x <= particulas[i].x+tamano_particula && x >= particulas[i].x && y <= particulas[i].y+tamano_particula && y >= particulas[i].y) ||    //Vertice superior izquierdo
+                (x+tamano_particula <= particulas[i].x+tamano_particula && x+tamano_particula >= particulas[i].x &&                                  //Vertice inferior derecho
+                y+tamano_particula <= particulas[i].y+tamano_particula && y+tamano_particula >= particulas[i].y)){
+                colision=1; //Si hay una particula
+                break;      //Sale del for
+            }
+        }
+        if(!colision){
+            particulas[(*cantidad_particulas)-1].x=x;
+            particulas[(*cantidad_particulas)-1].y=y;
+            break;
+        }
+    }
+
+    int d=rand()%modulo_direccion;
+    particulas[(*cantidad_particulas)-1].d=d;
+
+    int p=rand()%modulo_peso;
+    particulas[(*cantidad_particulas)-1].p=p;
+
+    particulas[(*cantidad_particulas)-1].w=tamano_particula;
+    particulas[(*cantidad_particulas)-1].h=tamano_particula;
+
+    return particulas;
+}
+
+SDL_Rect* destruir_particula(SDL_Rect *particulas, int *cantidad_particulas){
+    int marcada=rand()%(*cantidad_particulas);
+    for(int i=(marcada+1);i<(*cantidad_particulas);i++){
+        particulas[i-1]=particulas[i];
+    }
+    (*cantidad_particulas)--;
+    particulas=(SDL_Rect*)realloc(particulas,sizeof(SDL_Rect)*(*cantidad_particulas));
+    return particulas;
+}
+
 SDL_Rect* control_de_eventos(Recursos *recursos,int *cantidad_particulas,SDL_Rect *particulas){
     if(SDL_PollEvent(&(recursos->evento))){
         if(recursos->evento.type == SDL_QUIT){    //Si se aprieta la X de la ventana para salir
@@ -478,6 +479,7 @@ SDL_Rect* control_de_eventos(Recursos *recursos,int *cantidad_particulas,SDL_Rec
     return particulas;
 }
 
+//Funcion de visualizado
 void visualizacion(SDL_Rect *particulas,Recursos *recursos,int cantidad_particulas){
     //Se actualiza la surface del texto
     sprintf(recursos->texto_colisiones,"Colisiones: %d",recursos->contador_colisiones);
@@ -515,6 +517,7 @@ void visualizacion(SDL_Rect *particulas,Recursos *recursos,int cantidad_particul
     SDL_UpdateWindowSurface(recursos->ventana);
 }
 
+//Funciones que tienen que ver con las colisiones
 void deteccion_colision_borde(SDL_Rect *particula, Recursos *recursos) {  //Colicion con algun borde de la ventana
     if(particula->x <= 0){                       //Borde Izquierdo
         if(particula->d == 3){
@@ -681,6 +684,7 @@ void colisiones(Recursos *recursos, SDL_Rect *particulas, int cantidad_particula
     }
 }
 
+//Cuerpo principal del Codigo
 int main(int argc,char *argv[]){
     int cantidad_particulas=0;                                          //Guarda la cantidad de particulas ingresados
     SDL_Rect *particulas=cuerpo_lectura(&cantidad_particulas);          //Array en donde se guardaran los datos
