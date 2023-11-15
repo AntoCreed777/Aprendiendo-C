@@ -18,7 +18,7 @@
 #define modulo_direccion 8
 #define modulo_peso 11
 #define tamano_particula 40
-#define particulas_maximas 25
+#define particulas_maximas 100
 #define delay_maximo 20
 #define volumen_fondo 2     //Maximo dividido por este numero
 
@@ -72,6 +72,7 @@ typedef struct {
 
 } Recursos;
 
+//Funciones de lectura
 char* ingreso_string(){                                     //Getline casero
     printf("%sIngrese la direccion de su archivo: %s\n",BOLD,NORMAL);
     int capacidad=10;                                       //Capacidad del string
@@ -250,6 +251,7 @@ SDL_Rect* cuerpo_lectura(int *cantidad_particulas){
     return particulas;
 }
 
+//Funciones
 void guardado(SDL_Rect *particulas,int cantidad_particulas){
     char nombre_carpeta[40]= "Guardado Colisionador Particulas";
     if(access(nombre_carpeta,0) != 0){
@@ -444,7 +446,7 @@ SDL_Rect* control_de_eventos(Recursos *recursos,int *cantidad_particulas,SDL_Rec
                 guardado(particulas,(*cantidad_particulas));
             }
             else if(key == SDLK_m){
-                if((*cantidad_particulas) < particulas_maximas){   //El limite de pariculas en pantalla es de 20
+                if((*cantidad_particulas) < particulas_maximas){   //El limite de pariculas en pantalla
                     particulas = crear_particula(particulas,cantidad_particulas,recursos->DM);
                 }
             }
@@ -658,16 +660,17 @@ void colisiones(Recursos *recursos, SDL_Rect *particulas, int cantidad_particula
         deteccion_colision_borde(&particulas[i], recursos);
 
         for (int j = 0; j < cantidad_particulas; j++) {
-            if (i != j && SDL_HasIntersection(&particulas[i], &particulas[j]) && particulas[i].p<=particulas[j].p) {
+            if (i != j && particulas[i].p<=particulas[j].p) {
+                if(SDL_HasIntersection(&particulas[i], &particulas[j])){
+                    //Funcion que detecta las colisiones de las particulas
+                    colision_particulas(&particulas[i], &particulas[j], recursos);
 
-                //Funcion que detecta las colisiones de las particulas
-                colision_particulas(&particulas[i], &particulas[j], recursos);
+                    // Reproducir sonido de golpe
+                    Mix_PlayChannel(1,recursos->sonido_golpe, 0);
+                    recursos->contador_colisiones++;
 
-                // Reproducir sonido de golpe
-                Mix_PlayChannel(1,recursos->sonido_golpe, 0);
-                recursos->contador_colisiones++;
-
-                movimiento_particula(&particulas[i]);
+                    movimiento_particula(&particulas[i]);
+                }
             }
         }
     }
