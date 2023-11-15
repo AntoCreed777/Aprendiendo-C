@@ -20,7 +20,7 @@
 #define tamano_particula 100
 #define particulas_maximas 25
 #define delay_maximo 20
-#define volumen_fondo 4     //Maximo dividido por este numero
+#define volumen_fondo 2     //Maximo dividido por este numero
 
 //Estructura en que se guardaran los recursos necesarios para imprimir en pantalla
 typedef struct {
@@ -53,12 +53,14 @@ typedef struct {
     SDL_Point mouse;
 
     //Variables extras
+    int running;                    //Variable que indica si se sigue o no en la Simulacion
     int contador_colisiones;        //Registra las cantidades de colisiones
     time_t tiempo_inicial;          //Registra el momento en que se inicio el programa
+    time_t tiempo_actual;           //Registra el tiempo actual
+    time_t tiempo_que_paso;         //Registra el tiempo que paso entre el tiempo inicial y el tiempo actual
     int DELAY;                      //Controla el Delay de la pantalla
-    
-} recursos;
 
+} Recursos;
 
 char* ingreso_string(){                                     //Getline casero
     printf("%sIngrese la direccion de su archivo: %s\n",BOLD,NORMAL);
@@ -326,6 +328,62 @@ int inicializado_SDL2(){
     return 0;
 }
 
+int inicializado_de_recursos(Recursos *recursos) {
+
+    //Inicio los sonidos en sus respectivas variables
+    recursos->sonido_fondo = Mix_LoadWAV("assets/Sonido_Fondo.mp3");
+    recursos->sonido_golpe = Mix_LoadWAV("assets/right-cross-cross.mp3");
+    recursos->sonido_pared = Mix_LoadWAV("assets/sonido_colision_pared.mp3");
+
+    //Verifico que se hayan iniciado bien
+    if (!recursos->sonido_golpe || !recursos->sonido_fondo || !recursos->sonido_pared) {
+        printf("Error al cargar los archivos de audio: %s\n", Mix_GetError());
+        return 1;
+    }
+
+    //Comienzo la reproduccion del sonido de fondo
+    Mix_PlayChannel(0, recursos->sonido_fondo, -1);
+    Mix_VolumeChunk(recursos->sonido_fondo, MIX_MAX_VOLUME / volumen_fondo);
+
+    //Inicio la fuente en su respectiva variable
+    recursos->font = TTF_OpenFont("assets/Handlee-Regular.ttf", 24);
+
+    //Verifico que se haya inicido bien
+    if (!recursos->font) {
+        printf("TTF_OpenFont: %s\n", TTF_GetError());
+        return 1;
+    }
+
+    //Obtengo la dimension de la pantalla y la guardo en su respectiva variable
+    SDL_GetDesktopDisplayMode(0, &recursos->DM);
+
+    //Inicio la ventana en su respectiva variable
+    recursos->ventana = SDL_CreateWindow("Desplegable", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                        recursos->DM.w, recursos->DM.h, SDL_WINDOW_BORDERLESS | SDL_WINDOW_SHOWN);
+
+    //Si no se inicio la ventana retorno error 
+    if (!recursos->ventana) {
+        SDL_Log("Incapaz de crear la ventana: %s", SDL_GetError());
+        TTF_CloseFont(recursos->font);
+        return 1;
+    }
+
+    // Maximizo la ventana
+    SDL_MaximizeWindow(recursos->ventana);
+
+    //Creo la surface a la ventana
+    recursos->screen_surface = SDL_GetWindowSurface(recursos->ventana);
+
+    //Inicializo otras variables
+    recursos->running = 1;
+    recursos->contador_colisiones = 0;
+    recursos->tiempo_inicial = time(NULL);
+    recursos->DELAY = 0;
+
+    return 0; // Exito al inicializar los recursos 
+}
+
+
 int main(int argc,char *argv[]){
     int cantidad_particulas=0;                                          //Guarda la cantidad de particulas ingresados
     SDL_Rect *particulas=cuerpo_lectura(&cantidad_particulas);          //Array en donde se guardaran los datos
@@ -334,67 +392,35 @@ int main(int argc,char *argv[]){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     if(inicializado_SDL2() == 1){free(particulas);return 0;}
 
-    Mix_Chunk *sonido_fondo = Mix_LoadWAV("assets/Sonido_Fondo.mp3");
-    Mix_Chunk *sonido_golpe = Mix_LoadWAV("assets/right-cross-cross.mp3");
-    Mix_Chunk *sonido_pared = Mix_LoadWAV("assets/sonido_colision_pared.mp3");
-    if (!sonido_golpe || !sonido_fondo || !sonido_pared) {
-        printf("Error al cargar los archivos de audio: %s\n", Mix_GetError());
-        return -1;
+    Recursos recursos;
+
+    if(inicializado_de_recursos(&recursos) == 1){
+        free(particulas);
+        Mix_CloseAudio();
+        TTF_Quit();
+        SDL_Quit();
+        return 0;
     }
-    Mix_PlayChannel(0,sonido_fondo, -1);      //Reproduce el sonido de fondo
-    Mix_VolumeChunk(sonido_fondo,MIX_MAX_VOLUME/volumen_fondo);
-
-
-    //Creacion del Texto
-    TTF_Font *font;
-    font = TTF_OpenFont("assets/Handlee-Regular.ttf",24);
-    if(!font){
-        printf("TTF_OpenFont:   %s\n",TTF_GetError());
-    }
-    SDL_Surface *surface_colisiones;
-    SDL_Surface *tiempo_transcurrido;
-    SDL_Surface *delay;
-    SDL_Surface *contador;
-
-    // Obtengo la maxima resolucion de la pantalla
-    SDL_DisplayMode DM;
-    SDL_GetDesktopDisplayMode(0, &DM);
-    //Creacion de la ventana
-    SDL_Window *ventana = SDL_CreateWindow("Desplegable",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,DM.w,DM.h,SDL_WINDOW_BORDERLESS | SDL_WINDOW_SHOWN);
-    if(ventana == NULL){
-        SDL_Log("Incapaz de crear la ventana: %s", SDL_GetError());
-        return 1;
-    }
-
-    SDL_Surface *screen_surface = SDL_GetWindowSurface(ventana);
-    int running = 1;
-    SDL_Event evento;
-
-    SDL_Point mouse;
-
-    int contador_colisiones=0;
-    time_t tiempo_inicial = time(NULL);
-    int DELAY=0;        //Controla el Delay de la pantalla
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    while(running == 1){
-        while(SDL_PollEvent(&evento)){
-            if(evento.type == SDL_QUIT){    //Si se aprieta la X de la ventana para salir
-                running = 0;
+    while(recursos.running == 1){
+        while(SDL_PollEvent(&recursos.evento)){
+            if(recursos.evento.type == SDL_QUIT){    //Si se aprieta la X de la ventana para salir
+                recursos.running = 0;
             }
-            if(evento.type == SDL_KEYDOWN){     //Si se aprieta una tecla
-                SDL_Keycode key = evento.key.keysym.sym;
+            if(recursos.evento.type == SDL_KEYDOWN){     //Si se aprieta una tecla
+                SDL_Keycode key = recursos.evento.key.keysym.sym;
                 if(key == SDLK_ESCAPE){
-                    running =0;
+                    recursos.running =0;
                 }
                 else if(key == SDLK_g){
                     guardado(particulas,cantidad_particulas);
                 }
                 else if(key == SDLK_m){
                     if(cantidad_particulas < particulas_maximas){   //El limite de pariculas en pantalla es de 20
-                        particulas = crear_particula(particulas,&cantidad_particulas,DM);
+                        particulas = crear_particula(particulas,&cantidad_particulas,recursos.DM);
                     }
                 }
                 else if(key == SDLK_k){
@@ -403,23 +429,23 @@ int main(int argc,char *argv[]){
                     }
                 }
                 else if(key == SDLK_t){
-                    if(DELAY < delay_maximo){    //Solo se puede colocar un DELAY maximo de 100
-                        DELAY++;
+                    if(recursos.DELAY < delay_maximo){    //Solo se puede colocar un DELAY maximo de 100
+                        recursos.DELAY++;
                     }
                 }
                 else if(key == SDLK_y){
-                    if(DELAY > 0){     //No puede ser negativo el DELAY
-                        DELAY--;
+                    if(recursos.DELAY > 0){     //No puede ser negativo el DELAY
+                        recursos.DELAY--;
                     }
                 }
                 else if(key == SDLK_r){ //Se reinicia el contador de coliciones
-                    contador_colisiones=0;
+                    recursos.contador_colisiones=0;
                 }
             }
-            if(evento.type == SDL_MOUSEBUTTONDOWN){ //Si se clickea con el mause
-                mouse.x = evento.button.x;
-                mouse.y = evento.button.y;
-                SDL_Log("Hice CLICK en (%d,%d)",mouse.x,mouse.y);
+            if(recursos.evento.type == SDL_MOUSEBUTTONDOWN){ //Si se clickea con el mause
+                recursos.mouse.x = recursos.evento.button.x;
+                recursos.mouse.y = recursos.evento.button.y;
+                SDL_Log("Hice CLICK en (%d,%d)",recursos.mouse.x,recursos.mouse.y);
             }
         }
         
@@ -427,32 +453,32 @@ int main(int argc,char *argv[]){
 
         //Se actualiza la surface del texto
         char texto_colisiones[30];
-        sprintf(texto_colisiones,"Colisiones: %d",contador_colisiones);
-        surface_colisiones = TTF_RenderText_Solid(font,texto_colisiones,colorTexto);
+        sprintf(texto_colisiones,"Colisiones: %d",recursos.contador_colisiones);
+        recursos.surface_colisiones = TTF_RenderText_Solid(recursos.font,texto_colisiones,colorTexto);
 
         //Se actualiza la surface del tiempo transcurrido
         char texto_tiempo[30];
-        time_t tiempo_actual = time(NULL);
-        time_t tiempo_que_paso = tiempo_actual - tiempo_inicial;
-        sprintf(texto_tiempo,"Tiempo transcurrido: %ld",(long int)tiempo_que_paso);
-        tiempo_transcurrido = TTF_RenderText_Solid(font,texto_tiempo,colorTexto);
+        recursos.tiempo_actual = time(NULL);
+        recursos.tiempo_que_paso = recursos.tiempo_actual - recursos.tiempo_inicial;
+        sprintf(texto_tiempo,"Tiempo transcurrido: %ld",(long int)recursos.tiempo_que_paso);
+        recursos.tiempo_transcurrido = TTF_RenderText_Solid(recursos.font,texto_tiempo,colorTexto);
         
         // Se actualiza la superficie del Delay
         char texto_delay[30];
-        sprintf(texto_delay,"DELAY: %d",DELAY);
-        delay = TTF_RenderText_Solid(font,texto_delay,colorTexto);
+        sprintf(texto_delay,"DELAY: %d",recursos.DELAY);
+        recursos.delay = TTF_RenderText_Solid(recursos.font,texto_delay,colorTexto);
 
         // Se actualiza la superficie del contador de particulas
         char texto_contador[30];
         sprintf(texto_contador,"Cantidad de Particulas: %d",cantidad_particulas);
-        contador = TTF_RenderText_Solid(font,texto_contador,colorTexto);
+        recursos.contador = TTF_RenderText_Solid(recursos.font,texto_contador,colorTexto);
 
         //Limpia la ventana
-        SDL_FillRect(screen_surface, NULL, SDL_MapRGB(screen_surface->format, 0, 0, 0));
+        SDL_FillRect(recursos.screen_surface, NULL, SDL_MapRGB(recursos.screen_surface->format, 0, 0, 0));
         
         //Se agregan las particulas a la pantalla
         for(int i=0;i<cantidad_particulas;i++){
-            SDL_FillRect(screen_surface, &particulas[i], SDL_MapRGB(screen_surface->format, 240, 50, 250));
+            SDL_FillRect(recursos.screen_surface, &particulas[i], SDL_MapRGB(recursos.screen_surface->format, 240, 50, 250));
         }
 
         //Se agrega el Texto a la pantalla
@@ -460,13 +486,13 @@ int main(int argc,char *argv[]){
         SDL_Rect cuadro_tiempo_transcurrido={0,0};
         SDL_Rect cuadro_delay={0,30};
         SDL_Rect cuadro_contador={0,60};
-        SDL_BlitSurface(surface_colisiones, NULL, screen_surface, &cuadro_texto);
-        SDL_BlitSurface(tiempo_transcurrido, NULL, screen_surface, &cuadro_tiempo_transcurrido);
-        SDL_BlitSurface(delay, NULL, screen_surface, &cuadro_delay);
-        SDL_BlitSurface(contador, NULL, screen_surface, &cuadro_contador);
+        SDL_BlitSurface(recursos.surface_colisiones, NULL, recursos.screen_surface, &cuadro_texto);
+        SDL_BlitSurface(recursos.tiempo_transcurrido, NULL, recursos.screen_surface, &cuadro_tiempo_transcurrido);
+        SDL_BlitSurface(recursos.delay, NULL, recursos.screen_surface, &cuadro_delay);
+        SDL_BlitSurface(recursos.contador, NULL, recursos.screen_surface, &cuadro_contador);
         
         //Se imprime la pantalla
-        SDL_UpdateWindowSurface(ventana);
+        SDL_UpdateWindowSurface(recursos.ventana);
 
         //Calculo de la siguiente posicion y actualizacion de valores particulas
         for(int i=0;i<cantidad_particulas;i++){
@@ -484,9 +510,9 @@ int main(int argc,char *argv[]){
                 else{
                     particulas[i].d= 0;
                 }
-                Mix_PlayChannel(2,sonido_pared, 0);
+                Mix_PlayChannel(2,recursos.sonido_pared, 0);
             }
-            if(particulas[i].x >= DM.w-tamano_particula){   //Borde Derecho
+            if(particulas[i].x >= recursos.DM.w-tamano_particula){   //Borde Derecho
                 if(particulas[i].d == 7){
                     particulas[i].d= 5;
                 }
@@ -499,7 +525,7 @@ int main(int argc,char *argv[]){
                 else{
                     particulas[i].d= 4;
                 }
-                Mix_PlayChannel(2,sonido_pared, 0);
+                Mix_PlayChannel(2,recursos.sonido_pared, 0);
             }
             if(particulas[i].y <= 0){                       //Borde Superior
                 if(particulas[i].d == 1){
@@ -514,9 +540,9 @@ int main(int argc,char *argv[]){
                 else{
                     particulas[i].d= 6;
                 }
-                Mix_PlayChannel(2,sonido_pared, 0);
+                Mix_PlayChannel(2,recursos.sonido_pared, 0);
             }
-            if(particulas[i].y >= DM.h-tamano_particula){   //Borde Inferior
+            if(particulas[i].y >= recursos.DM.h-tamano_particula){   //Borde Inferior
                 if(particulas[i].d == 7){
                     particulas[i].d= 1;
                 }
@@ -529,7 +555,7 @@ int main(int argc,char *argv[]){
                 else{
                     particulas[i].d= 2;
                 }
-                Mix_PlayChannel(2,sonido_pared, 0);
+                Mix_PlayChannel(2,recursos.sonido_pared, 0);
             }
             
             //Colicion con otra particula
@@ -577,8 +603,8 @@ int main(int argc,char *argv[]){
                         particulas[j].d=aux_direccion;
 
                         // Reproducir sonido de golpe
-                        Mix_PlayChannel(1,sonido_golpe, 0);
-                        contador_colisiones++;
+                        Mix_PlayChannel(1,recursos.sonido_golpe, 0);
+                        recursos.contador_colisiones++;
                         switch (particulas[j].d)    //Los desplazo un espacio extra
                         {
                         case 0: //Derecha
@@ -648,18 +674,18 @@ int main(int argc,char *argv[]){
             }
         }
     
-        SDL_Delay(DELAY);
+        SDL_Delay(recursos.DELAY);
     }
 
     //Liberacion de la memoria usada en el programa
     free(particulas);
     //Destruccion de la ventana y cierre de SDL
-    TTF_CloseFont(font);
-    SDL_FreeSurface(surface_colisiones);
-    SDL_FreeSurface(screen_surface);
-    SDL_DestroyWindow(ventana);
-    Mix_FreeChunk(sonido_fondo);
-    Mix_FreeChunk(sonido_golpe);
+    TTF_CloseFont(recursos.font);
+    SDL_FreeSurface(recursos.surface_colisiones);
+    SDL_FreeSurface(recursos.screen_surface);
+    SDL_DestroyWindow(recursos.ventana);
+    Mix_FreeChunk(recursos.sonido_fondo);
+    Mix_FreeChunk(recursos.sonido_golpe);
     Mix_CloseAudio();
     TTF_Quit();
     SDL_Quit();
