@@ -17,7 +17,7 @@
 #define CARACTERESMAXIMOS 100000
 #define modulo_direccion 8
 #define modulo_peso 11
-#define tamano_particula 40
+#define tamano_particula 200
 #define particulas_maximas 100
 #define volumen_fondo 2     //Maximo dividido por este numero
 
@@ -74,6 +74,44 @@ typedef struct {
 } Recursos;
 
 //Funciones de lectura
+void asignacion_direcciones(SDL_Rect *particula,int direccion){
+    switch (direccion)
+    {
+    case 0: //Derecha
+        particula->dx = 1;      //X
+        particula->dy = 0;      //Y
+        break;
+    case 1: //Derecha Arriba
+        particula->dx = 1;      //X
+        particula->dy = -1;     //Y
+        break;
+    case 2: //Arriba
+        particula->dx= 0 ;      //X
+        particula->dy = -1;     //Y
+        break;
+    case 3: //Arriba Izquierda
+        particula->dx = -1;     //X
+        particula->dy = -1;     //Y
+        break;
+    case 4: //Izquierda
+        particula->dx = -1;     //X
+        particula->dy = 0;      //Y
+        break;
+    case 5: //Izquierda Abajo
+        particula->dx= -1;      //X
+        particula->dy = 1;      //Y
+        break;
+    case 6: //Abajo
+        particula->dx = 0;      //X
+        particula->dy = 1;      //Y
+        break;
+    case 7: //Abajo Derecha
+        particula->dx = 1;      //X
+        particula->dy = 1;      //Y
+        break;
+    }
+}
+
 char* ingreso_string(){                                     //Getline casero
     printf("%sIngrese la direccion de su archivo: %s\n",BOLD,NORMAL);
     int capacidad=10;                                       //Capacidad del string
@@ -133,7 +171,7 @@ SDL_Rect* CSV(FILE *p,int *contador){       //Funcion que recibe los datos separ
 
         particulas[*contador].x=numero1;                                           //Asignacion de la coordenada X de forma definitiva
         particulas[*contador].y=numero2;                                           //Asignacion de la coordenada Y de forma definitiva
-        particulas[*contador].d=numero3 % modulo_direccion;                        //Asignacion de la Direccion de forma definitiva
+        asignacion_direcciones(&particulas[*contador],numero3 % modulo_direccion); //Asignacion de la Direccion de forma definitiva                    
         particulas[*contador].p=numero4 % modulo_peso;                             //Asignacion de la Direccion de forma definitiva
         (*contador)++;                                                             //Aumento el contador de particulas en uno
     }
@@ -159,7 +197,7 @@ SDL_Rect* BINARIO(FILE *p,int *contador){                       //Funcion que re
                 }
                 else if((i+1)/32 == 3){                         //Al dato de la direccion le aplico el modulo para levarlo a valores dentro del rango
                     dato = dato % modulo_direccion;
-                    particulas[*contador].d=dato;               //Se asigna el dato de direccion al array
+                    asignacion_direcciones(&particulas[*contador],dato);    //Se asigna el dato de direccion al array
                 }
                 else if((i+1)/32 == 4){                         //Al dato del peso le aplico el modulo para levarlo a valores dentro del rango
                     dato = dato % modulo_peso;
@@ -187,7 +225,7 @@ SDL_Rect* TEXTO(FILE *p,int *contador){
 
                 particulas[*contador].x=x;                                                 //Asignacion de la coordenada X de forma definitiva
                 particulas[*contador].y=y;                                                 //Asignacion de la coordenada Y de forma definitiva
-                particulas[*contador].d=rand()%modulo_direccion;                           //Como no hay direccion lo asigno de forma random
+                asignacion_direcciones(&particulas[*contador],rand()%modulo_direccion);    //Como no hay direccion lo asigno de forma random
                 particulas[*contador].p=rand()%modulo_peso;                                //Como no hay peso lo asigno de forma random
                 
                 (*contador)++;                                                                      //Aumento el contador de particulas en uno
@@ -399,7 +437,17 @@ void guardado(SDL_Rect *particulas,int cantidad_particulas){
 
     fputc('c',salida);
     for(int i=0; i<cantidad_particulas;i++){
-        fprintf(salida,"%d;%d;%d;%d;\n",particulas[i].x,particulas[i].y,particulas[i].d,particulas[i].p);
+        int aux_direccion;
+        if(particulas[i].dx == 1 && particulas[i].dy == 0){aux_direccion = 0;}
+        if(particulas[i].dx == 1 && particulas[i].dy == -1){aux_direccion = 1;}
+        if(particulas[i].dx == 0 && particulas[i].dy == -1){aux_direccion = 2;}
+        if(particulas[i].dx == -1 && particulas[i].dy == -1){aux_direccion = 3;}
+        if(particulas[i].dx == -1 && particulas[i].dy == 0){aux_direccion = 4;}
+        if(particulas[i].dx == -1 && particulas[i].dy == 1){aux_direccion = 5;}
+        if(particulas[i].dx == 0 && particulas[i].dy == 1){aux_direccion = 6;}
+        if(particulas[i].dx == 1 && particulas[i].dy == 1){aux_direccion = 7;}
+
+        fprintf(salida,"%d;%d;%d;%d;\n",particulas[i].x,particulas[i].y,aux_direccion,particulas[i].p);
     }
 
     fclose(salida);
@@ -428,7 +476,7 @@ SDL_Rect* crear_particula(SDL_Rect *particulas, int *cantidad_particulas,SDL_Dis
     }
 
     int d=rand()%modulo_direccion;
-    particulas[(*cantidad_particulas)-1].d=d;
+    asignacion_direcciones(&particulas[(*cantidad_particulas)-1],d);
 
     int p=rand()%modulo_peso;
     particulas[(*cantidad_particulas)-1].p=p;
@@ -536,63 +584,17 @@ void visualizacion(SDL_Rect *particulas, Recursos *recursos, int cantidad_partic
 
 //Funciones que tienen que ver con las colisiones
 void deteccion_colision_borde(SDL_Rect *particula, Recursos *recursos) {  //Colicion con algun borde de la ventana
-    if(particula->x <= 0){                       //Borde Izquierdo
-        if(particula->d == 3){
-            particula->d= 1;
-        }
-        else if(particula->d == 4){
-            particula->d= 0;
-        }
-        else if(particula->d == 5){
-            particula->d= 7;
-        }
-        else{
-            particula->d= 0;
+    if(particula->x < 0 || particula->x > recursos->DM.w-tamano_particula){                       //Borde Izquierdo o Derecho
+        particula->dx*=-1;
+        if(particula->y < 0 || particula->y > recursos->DM.h-tamano_particula){
+            particula->dy*=-1;
         }
         Mix_PlayChannel(2,recursos->sonido_pared, 0);
     }
-    if(particula->x >= recursos->DM.w-tamano_particula){   //Borde Derecho
-        if(particula->d == 7){
-            particula->d= 5;
-        }
-        else if(particula->d == 0){
-            particula->d= 4;
-        }
-        else if(particula->d == 1){
-            particula->d= 3;
-        }
-        else{
-            particula->d= 4;
-        }
-        Mix_PlayChannel(2,recursos->sonido_pared, 0);
-    }
-    if(particula->y <= 0){                       //Borde Superior
-        if(particula->d == 1){
-            particula->d= 7;
-        }
-        else if(particula->d == 2){
-            particula->d= 6;
-        }
-        else if(particula->d == 3){
-            particula->d= 5;
-        }
-        else{
-            particula->d= 6;
-        }
-        Mix_PlayChannel(2,recursos->sonido_pared, 0);
-    }
-    if(particula->y >= recursos->DM.h-tamano_particula){   //Borde Inferior
-        if(particula->d == 7){
-            particula->d= 1;
-        }
-        else if(particula->d == 6){
-            particula->d= 2;
-        }
-        else if(particula->d == 5){
-            particula->d= 3;
-        }
-        else{
-            particula->d= 2;
+    if(particula->y < 0 || particula->y > recursos->DM.h-tamano_particula){                       //Borde Superior o Inferior
+        particula->dy*=-1;
+        if(particula->x < 0 || particula->x > recursos->DM.w-tamano_particula){
+            particula->dx*=-1;
         }
         Mix_PlayChannel(2,recursos->sonido_pared, 0);
     }
@@ -637,42 +639,13 @@ void colision_particulas(SDL_Rect *particula1, SDL_Rect *particula2, Recursos *r
             aux_direccion=rand()%modulo_direccion;
         }while(aux_direccion == 4 ||aux_direccion == 5 || aux_direccion == 6);
     }
-    particula1->d=aux_direccion;
+    asignacion_direcciones(particula1,aux_direccion);
 }
 
 void movimiento_particula(SDL_Rect *particula){
     //Movimiento +1
-    switch (particula->d)
-    {
-    case 0: //Derecha
-        particula->x++ ;    //X
-        break;
-    case 1: //Derecha Arriba
-        particula->x++ ;    //X
-        particula->y-- ;    //Y
-        break;
-    case 2: //Arriba
-        particula->y-- ;    //Y
-        break;
-    case 3: //Arriba Izquierda
-        particula->x-- ;    //X
-        particula->y-- ;    //Y
-        break;
-    case 4: //Izquierda
-        particula->x-- ;    //X
-        break;
-    case 5: //Izquierda Abajo
-        particula->x-- ;    //X
-        particula->y++ ;    //Y
-        break;
-    case 6: //Abajo
-        particula->y++ ;    //Y
-        break;
-    case 7: //Abajo Derevha
-        particula->x++ ;    //X
-        particula->y++ ;    //Y
-        break;
-    }
+    particula->x+=particula->dx;
+    particula->y+=particula->dy;
 }
 
 void colisiones(Recursos *recursos, SDL_Rect *particulas, int cantidad_particulas) {

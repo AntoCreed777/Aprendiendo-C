@@ -79,7 +79,8 @@ typedef struct SDL_Rect
 {
     int x, y;
     int w, h;
-    int d, p;
+    int dx, dy;
+    int p;
 } SDL_Rect;
 
 
