@@ -367,7 +367,8 @@ int inicializado_de_recursos(Recursos *recursos) {
     }
 
     //Obtengo la dimension de la pantalla y la guardo en su respectiva variable
-    SDL_GetDesktopDisplayMode(0, &recursos->DM);
+    SDL_GetCurrentDisplayMode(0, &recursos->DM);
+
 
     //Inicio la ventana en su respectiva variable
     recursos->ventana = SDL_CreateWindow("Desplegable", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -411,12 +412,15 @@ int inicializado_de_recursos(Recursos *recursos) {
     return 0; // Exito al inicializar los recursos 
 }
 
-void finalizacion_de_recursos(SDL_Rect *particulas,Recursos *recursos){
+void finalizacion_de_recursos_y_librerias(SDL_Rect *particulas,Recursos *recursos){
     //Liberacion de la memoria usada en el programa
     free(particulas);
     //Destruccion de la ventana y cierre de SDL
     TTF_CloseFont(recursos->font);
     SDL_FreeSurface(recursos->surface_colisiones);
+    SDL_FreeSurface(recursos->tiempo_transcurrido);
+    SDL_FreeSurface(recursos->delay);
+    SDL_FreeSurface(recursos->contador);
     SDL_FreeSurface(recursos->screen_surface);
     SDL_DestroyWindow(recursos->ventana);
     Mix_FreeChunk(recursos->sonido_fondo);
@@ -724,7 +728,7 @@ int main(int argc,char *argv[]){
         SDL_Delay(recursos.DELAY);
     }
     
-    finalizacion_de_recursos(particulas,&recursos);
+    finalizacion_de_recursos_y_librerias(particulas,&recursos);
 
     return 0;
 }
