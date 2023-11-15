@@ -492,6 +492,187 @@ void visualizacion(SDL_Rect *particulas,Recursos *recursos,int cantidad_particul
     SDL_UpdateWindowSurface(recursos->ventana);
 }
 
+void colisiones(Recursos *recursos,SDL_Rect *particulas,int cantidad_particulas){
+    for(int i=0;i<cantidad_particulas;i++){
+        //Colicion con algun borde de la ventana
+        if(particulas[i].x <= 0){                       //Borde Izquierdo
+            if(particulas[i].d == 3){
+                particulas[i].d= 1;
+            }
+            else if(particulas[i].d == 4){
+                particulas[i].d= 0;
+            }
+            else if(particulas[i].d == 5){
+                particulas[i].d= 7;
+            }
+            else{
+                particulas[i].d= 0;
+            }
+            Mix_PlayChannel(2,recursos->sonido_pared, 0);
+        }
+        if(particulas[i].x >= recursos->DM.w-tamano_particula){   //Borde Derecho
+            if(particulas[i].d == 7){
+                particulas[i].d= 5;
+            }
+            else if(particulas[i].d == 0){
+                particulas[i].d= 4;
+            }
+            else if(particulas[i].d == 1){
+                particulas[i].d= 3;
+            }
+            else{
+                particulas[i].d= 4;
+            }
+            Mix_PlayChannel(2,recursos->sonido_pared, 0);
+        }
+        if(particulas[i].y <= 0){                       //Borde Superior
+            if(particulas[i].d == 1){
+                particulas[i].d= 7;
+            }
+            else if(particulas[i].d == 2){
+                particulas[i].d= 6;
+            }
+            else if(particulas[i].d == 3){
+                particulas[i].d= 5;
+            }
+            else{
+                particulas[i].d= 6;
+            }
+            Mix_PlayChannel(2,recursos->sonido_pared, 0);
+        }
+        if(particulas[i].y >= recursos->DM.h-tamano_particula){   //Borde Inferior
+            if(particulas[i].d == 7){
+                particulas[i].d= 1;
+            }
+            else if(particulas[i].d == 6){
+                particulas[i].d= 2;
+            }
+            else if(particulas[i].d == 5){
+                particulas[i].d= 3;
+            }
+            else{
+                particulas[i].d= 2;
+            }
+            Mix_PlayChannel(2,recursos->sonido_pared, 0);
+        }
+        
+        //Colicion con otra particula
+        for(int j=0;j<cantidad_particulas;j++){ //Recorro las particulas
+            for(int k=0;k<cantidad_particulas;k++){ //Recorro las particulas menos la de la J
+                if(SDL_HasIntersection(&particulas[j],&particulas[k]) && j!=k && particulas[j].p<=particulas[k].p){ //Si se intersectan 
+                    SDL_Rect interseccion;
+                    int aux_direccion, arriba=0,abajo=0,izquierda=0,derecha=0;
+                    SDL_IntersectRect(&particulas[j], &particulas[k], &interseccion);              //Extraigo la interseccion
+
+                    //Detecto donde se transpazo el limite de la particula
+                    if(interseccion.y == particulas[j].y){                                         // La intersección esta en la parte superior de la particula
+                        arriba=1;
+                    }
+                    if(interseccion.y + interseccion.h == particulas[j].y + particulas[j].h){      //La interseccion esta en la parte inferior de la particula
+                        abajo=1;
+                    }
+                    if(interseccion.x == particulas[j].x){                                         //La interseccion esta en la parte izquierda de la particula
+                        izquierda=1;
+                    }
+                    if(interseccion.x + interseccion.w == particulas[j].x + particulas[j].w){      //La interseccion esta en la parte derecha de la particula
+                        derecha=1;
+                    }
+
+                    if(arriba == 1 && izquierda == 1){
+                        do{
+                            aux_direccion=rand()%modulo_direccion;
+                        }while(aux_direccion == 2 || aux_direccion == 3 || aux_direccion == 4);
+                    }
+                    else if(arriba == 1 && derecha == 1){
+                        do{
+                            aux_direccion=rand()%modulo_direccion;
+                        }while(aux_direccion == 0 ||aux_direccion == 1 || aux_direccion == 2);
+                    }
+                    else if(abajo == 1 && derecha == 1){
+                        do{
+                            aux_direccion=rand()%modulo_direccion;
+                        }while(aux_direccion == 0 ||aux_direccion == 7 || aux_direccion == 6);
+                    }
+                    else if(abajo == 1 && izquierda == 1){
+                        do{
+                            aux_direccion=rand()%modulo_direccion;
+                        }while(aux_direccion == 4 ||aux_direccion == 5 || aux_direccion == 6);
+                    }
+                    particulas[j].d=aux_direccion;
+
+                    // Reproducir sonido de golpe
+                    Mix_PlayChannel(1,recursos->sonido_golpe, 0);
+                    recursos->contador_colisiones++;
+                    switch (particulas[j].d)    //Los desplazo un espacio extra
+                    {
+                    case 0: //Derecha
+                        particulas[j].x++ ;    //X
+                        break;
+                    case 1: //Derecha Arriba
+                        particulas[j].x++ ;    //X
+                        particulas[j].y-- ;    //Y
+                        break;
+                    case 2: //Arriba
+                        particulas[j].y-- ;    //Y
+                        break;
+                    case 3: //Arriba Izquierda
+                        particulas[j].x-- ;    //X
+                        particulas[j].y-- ;    //Y
+                        break;
+                    case 4: //Izquierda
+                        particulas[j].x-- ;    //X
+                        break;
+                    case 5: //Izquierda Abajo
+                        particulas[j].x-- ;    //X
+                        particulas[j].y++ ;    //Y
+                        break;
+                    case 6: //Abajo
+                        particulas[j].y++ ;    //Y
+                        break;
+                    case 7: //Abajo Derevha
+                        particulas[j].x++ ;    //X
+                        particulas[j].y++ ;    //Y
+                        break;
+                    }
+                }
+            }
+        }
+    
+        //Movimiento +1
+        switch (particulas[i].d)
+        {
+        case 0: //Derecha
+            particulas[i].x++ ;    //X
+            break;
+        case 1: //Derecha Arriba
+            particulas[i].x++ ;    //X
+            particulas[i].y-- ;    //Y
+            break;
+        case 2: //Arriba
+            particulas[i].y-- ;    //Y
+            break;
+        case 3: //Arriba Izquierda
+            particulas[i].x-- ;    //X
+            particulas[i].y-- ;    //Y
+            break;
+        case 4: //Izquierda
+            particulas[i].x-- ;    //X
+            break;
+        case 5: //Izquierda Abajo
+            particulas[i].x-- ;    //X
+            particulas[i].y++ ;    //Y
+            break;
+        case 6: //Abajo
+            particulas[i].y++ ;    //Y
+            break;
+        case 7: //Abajo Derevha
+            particulas[i].x++ ;    //X
+            particulas[i].y++ ;    //Y
+            break;
+        }
+    }
+}
+
 int main(int argc,char *argv[]){
     int cantidad_particulas=0;                                          //Guarda la cantidad de particulas ingresados
     SDL_Rect *particulas=cuerpo_lectura(&cantidad_particulas);          //Array en donde se guardaran los datos
@@ -519,186 +700,10 @@ int main(int argc,char *argv[]){
         //Actualizo la pantalla
         visualizacion(particulas,&recursos,cantidad_particulas);
 
-        //Calculo de la siguiente posicion y actualizacion de valores particulas
-        for(int i=0;i<cantidad_particulas;i++){
-            //Colicion con algun borde de la ventana
-            if(particulas[i].x <= 0){                       //Borde Izquierdo
-                if(particulas[i].d == 3){
-                    particulas[i].d= 1;
-                }
-                else if(particulas[i].d == 4){
-                    particulas[i].d= 0;
-                }
-                else if(particulas[i].d == 5){
-                    particulas[i].d= 7;
-                }
-                else{
-                    particulas[i].d= 0;
-                }
-                Mix_PlayChannel(2,recursos.sonido_pared, 0);
-            }
-            if(particulas[i].x >= recursos.DM.w-tamano_particula){   //Borde Derecho
-                if(particulas[i].d == 7){
-                    particulas[i].d= 5;
-                }
-                else if(particulas[i].d == 0){
-                    particulas[i].d= 4;
-                }
-                else if(particulas[i].d == 1){
-                    particulas[i].d= 3;
-                }
-                else{
-                    particulas[i].d= 4;
-                }
-                Mix_PlayChannel(2,recursos.sonido_pared, 0);
-            }
-            if(particulas[i].y <= 0){                       //Borde Superior
-                if(particulas[i].d == 1){
-                    particulas[i].d= 7;
-                }
-                else if(particulas[i].d == 2){
-                    particulas[i].d= 6;
-                }
-                else if(particulas[i].d == 3){
-                    particulas[i].d= 5;
-                }
-                else{
-                    particulas[i].d= 6;
-                }
-                Mix_PlayChannel(2,recursos.sonido_pared, 0);
-            }
-            if(particulas[i].y >= recursos.DM.h-tamano_particula){   //Borde Inferior
-                if(particulas[i].d == 7){
-                    particulas[i].d= 1;
-                }
-                else if(particulas[i].d == 6){
-                    particulas[i].d= 2;
-                }
-                else if(particulas[i].d == 5){
-                    particulas[i].d= 3;
-                }
-                else{
-                    particulas[i].d= 2;
-                }
-                Mix_PlayChannel(2,recursos.sonido_pared, 0);
-            }
-            
-            //Colicion con otra particula
-            for(int j=0;j<cantidad_particulas;j++){ //Recorro las particulas
-                for(int k=0;k<cantidad_particulas;k++){ //Recorro las particulas menos la de la J
-                    if(SDL_HasIntersection(&particulas[j],&particulas[k]) && j!=k && particulas[j].p<=particulas[k].p){ //Si se intersectan 
-                        SDL_Rect interseccion;
-                        int aux_direccion, arriba=0,abajo=0,izquierda=0,derecha=0;
-                        SDL_IntersectRect(&particulas[j], &particulas[k], &interseccion);              //Extraigo la interseccion
-
-                        //Detecto donde se transpazo el limite de la particula
-                        if(interseccion.y == particulas[j].y){                                         // La intersección esta en la parte superior de la particula
-                            arriba=1;
-                        }
-                        if(interseccion.y + interseccion.h == particulas[j].y + particulas[j].h){      //La interseccion esta en la parte inferior de la particula
-                            abajo=1;
-                        }
-                        if(interseccion.x == particulas[j].x){                                         //La interseccion esta en la parte izquierda de la particula
-                            izquierda=1;
-                        }
-                        if(interseccion.x + interseccion.w == particulas[j].x + particulas[j].w){      //La interseccion esta en la parte derecha de la particula
-                            derecha=1;
-                        }
-
-                        if(arriba == 1 && izquierda == 1){
-                            do{
-                                aux_direccion=rand()%modulo_direccion;
-                            }while(aux_direccion == 2 || aux_direccion == 3 || aux_direccion == 4);
-                        }
-                        else if(arriba == 1 && derecha == 1){
-                            do{
-                                aux_direccion=rand()%modulo_direccion;
-                            }while(aux_direccion == 0 ||aux_direccion == 1 || aux_direccion == 2);
-                        }
-                        else if(abajo == 1 && derecha == 1){
-                            do{
-                                aux_direccion=rand()%modulo_direccion;
-                            }while(aux_direccion == 0 ||aux_direccion == 7 || aux_direccion == 6);
-                        }
-                        else if(abajo == 1 && izquierda == 1){
-                            do{
-                                aux_direccion=rand()%modulo_direccion;
-                            }while(aux_direccion == 4 ||aux_direccion == 5 || aux_direccion == 6);
-                        }
-                        particulas[j].d=aux_direccion;
-
-                        // Reproducir sonido de golpe
-                        Mix_PlayChannel(1,recursos.sonido_golpe, 0);
-                        recursos.contador_colisiones++;
-                        switch (particulas[j].d)    //Los desplazo un espacio extra
-                        {
-                        case 0: //Derecha
-                            particulas[j].x++ ;    //X
-                            break;
-                        case 1: //Derecha Arriba
-                            particulas[j].x++ ;    //X
-                            particulas[j].y-- ;    //Y
-                            break;
-                        case 2: //Arriba
-                            particulas[j].y-- ;    //Y
-                            break;
-                        case 3: //Arriba Izquierda
-                            particulas[j].x-- ;    //X
-                            particulas[j].y-- ;    //Y
-                            break;
-                        case 4: //Izquierda
-                            particulas[j].x-- ;    //X
-                            break;
-                        case 5: //Izquierda Abajo
-                            particulas[j].x-- ;    //X
-                            particulas[j].y++ ;    //Y
-                            break;
-                        case 6: //Abajo
-                            particulas[j].y++ ;    //Y
-                            break;
-                        case 7: //Abajo Derevha
-                            particulas[j].x++ ;    //X
-                            particulas[j].y++ ;    //Y
-                            break;
-                        }
-                    }
-                }
-            }
+        //Calculo de la siguiente posicion y actualizacion de las direcciones de las particulas
+        colisiones(&recursos,particulas,cantidad_particulas);
         
-            //Movimiento +1
-            switch (particulas[i].d)
-            {
-            case 0: //Derecha
-                particulas[i].x++ ;    //X
-                break;
-            case 1: //Derecha Arriba
-                particulas[i].x++ ;    //X
-                particulas[i].y-- ;    //Y
-                break;
-            case 2: //Arriba
-                particulas[i].y-- ;    //Y
-                break;
-            case 3: //Arriba Izquierda
-                particulas[i].x-- ;    //X
-                particulas[i].y-- ;    //Y
-                break;
-            case 4: //Izquierda
-                particulas[i].x-- ;    //X
-                break;
-            case 5: //Izquierda Abajo
-                particulas[i].x-- ;    //X
-                particulas[i].y++ ;    //Y
-                break;
-            case 6: //Abajo
-                particulas[i].y++ ;    //Y
-                break;
-            case 7: //Abajo Derevha
-                particulas[i].x++ ;    //X
-                particulas[i].y++ ;    //Y
-                break;
-            }
-        }
-    
+        //Aplicaciondel DELAY que desee el usuario (Se modifica en la parte de los eventos)
         SDL_Delay(recursos.DELAY);
     }
 
