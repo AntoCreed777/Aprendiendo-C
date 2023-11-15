@@ -17,7 +17,7 @@
 #define CARACTERESMAXIMOS 100000
 #define modulo_direccion 8
 #define modulo_peso 11
-#define tamano_particula 5
+#define tamano_particula 250
 #define particulas_maximas 2000
 #define volumen_fondo 2     //Maximo dividido por este numero
 
@@ -662,18 +662,21 @@ void movimiento_particula(SDL_Rect *particula){
 
 void colisiones(Recursos *recursos, SDL_Rect *particulas, int cantidad_particulas) {
     for (int i = 0; i < cantidad_particulas; i++) {
+        //Detecta la colicion con una pared
         int pared = deteccion_colision_borde(&particulas[i], recursos);
         for (int j = 0; j < cantidad_particulas; j++) {
-            if (i != j && particulas[i].p<=particulas[j].p) {
-                if(SDL_HasIntersection(&particulas[i], &particulas[j])){
-                    //Funcion que detecta las colisiones de las particulas
-                    colision_particulas(&particulas[i], &particulas[j], recursos);
+            if (i != j && particulas[i].p<=particulas[j].p && SDL_HasIntersection(&particulas[i], &particulas[j]) && !pared) {
+                //Funcion que detecta las colisiones de las particulas
+                colision_particulas(&particulas[i], &particulas[j], recursos);
 
-                    // Reproducir sonido de golpe
-                    Mix_PlayChannel(1,recursos->sonido_golpe, 0);
-                    recursos->contador_colisiones++;
-                    if(pared)movimiento_particula(&particulas[i]);
-                }
+                // Reproducir sonido de golpe
+                Mix_PlayChannel(1,recursos->sonido_golpe, 0);
+
+                //Aumenta el contador de coliciones
+                recursos->contador_colisiones++;
+
+                //Movimiento extra para salir de la interseccion
+                movimiento_particula(&particulas[i]);
             }
         }
     }
