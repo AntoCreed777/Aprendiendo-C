@@ -383,17 +383,63 @@ int inicializado_de_recursos(Recursos *recursos) {
     return 0; // Exito al inicializar los recursos 
 }
 
+SDL_Rect* control_de_eventos(Recursos *recursos,int *cantidad_particulas,SDL_Rect *particulas){
+    if(SDL_PollEvent(&(recursos->evento))){
+        if(recursos->evento.type == SDL_QUIT){    //Si se aprieta la X de la ventana para salir
+            recursos->running = 0;
+        }
+        if(recursos->evento.type == SDL_KEYDOWN){     //Si se aprieta una tecla
+            SDL_Keycode key = recursos->evento.key.keysym.sym;
+            if(key == SDLK_ESCAPE){
+                recursos->running =0;
+            }
+            else if(key == SDLK_g){
+                guardado(particulas,(*cantidad_particulas));
+            }
+            else if(key == SDLK_m){
+                if((*cantidad_particulas) < particulas_maximas){   //El limite de pariculas en pantalla es de 20
+                    particulas = crear_particula(particulas,cantidad_particulas,recursos->DM);
+                }
+            }
+            else if(key == SDLK_k){
+                if((*cantidad_particulas) >0){ //Si existen particulas se eliminan
+                    particulas=destruir_particula(particulas,cantidad_particulas);
+                }
+            }
+            else if(key == SDLK_t){
+                if(recursos->DELAY < delay_maximo){    //Solo se puede colocar un DELAY maximo de 100
+                    (recursos->DELAY)++;
+                }
+            }
+            else if(key == SDLK_y){
+                if(recursos->DELAY > 0){     //No puede ser negativo el DELAY
+                    (recursos->DELAY)--;
+                }
+            }
+            else if(key == SDLK_r){ //Se reinicia el contador de coliciones
+                recursos->contador_colisiones=0;
+            }
+        }
+        if(recursos->evento.type == SDL_MOUSEBUTTONDOWN){ //Si se clickea con el mause
+            recursos->mouse.x = recursos->evento.button.x;
+            recursos->mouse.y = recursos->evento.button.y;
+            SDL_Log("Hice CLICK en (%d,%d)",recursos->mouse.x,recursos->mouse.y);
+        }
+    }
+    return particulas;
+}
 
 int main(int argc,char *argv[]){
     int cantidad_particulas=0;                                          //Guarda la cantidad de particulas ingresados
     SDL_Rect *particulas=cuerpo_lectura(&cantidad_particulas);          //Array en donde se guardaran los datos
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////// FIN LECTURA ///////////INICIO VISUALIZACION/////////// Y-O MOVIMIENTO ////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //Inicializacion de las librerias
     if(inicializado_SDL2() == 1){free(particulas);return 0;}
 
+    //Creacion de la estructura de recursos
     Recursos recursos;
 
+    //Inicializacion de los recursos
     if(inicializado_de_recursos(&recursos) == 1){
         free(particulas);
         Mix_CloseAudio();
@@ -402,53 +448,9 @@ int main(int argc,char *argv[]){
         return 0;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+    //Ciclo de la simulacion
     while(recursos.running == 1){
-        while(SDL_PollEvent(&recursos.evento)){
-            if(recursos.evento.type == SDL_QUIT){    //Si se aprieta la X de la ventana para salir
-                recursos.running = 0;
-            }
-            if(recursos.evento.type == SDL_KEYDOWN){     //Si se aprieta una tecla
-                SDL_Keycode key = recursos.evento.key.keysym.sym;
-                if(key == SDLK_ESCAPE){
-                    recursos.running =0;
-                }
-                else if(key == SDLK_g){
-                    guardado(particulas,cantidad_particulas);
-                }
-                else if(key == SDLK_m){
-                    if(cantidad_particulas < particulas_maximas){   //El limite de pariculas en pantalla es de 20
-                        particulas = crear_particula(particulas,&cantidad_particulas,recursos.DM);
-                    }
-                }
-                else if(key == SDLK_k){
-                    if(cantidad_particulas >0){ //Si existen particulas se eliminan
-                        particulas=destruir_particula(particulas,&cantidad_particulas);
-                    }
-                }
-                else if(key == SDLK_t){
-                    if(recursos.DELAY < delay_maximo){    //Solo se puede colocar un DELAY maximo de 100
-                        recursos.DELAY++;
-                    }
-                }
-                else if(key == SDLK_y){
-                    if(recursos.DELAY > 0){     //No puede ser negativo el DELAY
-                        recursos.DELAY--;
-                    }
-                }
-                else if(key == SDLK_r){ //Se reinicia el contador de coliciones
-                    recursos.contador_colisiones=0;
-                }
-            }
-            if(recursos.evento.type == SDL_MOUSEBUTTONDOWN){ //Si se clickea con el mause
-                recursos.mouse.x = recursos.evento.button.x;
-                recursos.mouse.y = recursos.evento.button.y;
-                SDL_Log("Hice CLICK en (%d,%d)",recursos.mouse.x,recursos.mouse.y);
-            }
-        }
-        
+        particulas = control_de_eventos(&recursos, &cantidad_particulas, particulas);
         SDL_Color colorTexto = {250, 170, 50, 255};
 
         //Se actualiza la surface del texto
