@@ -19,7 +19,6 @@
 #define modulo_peso 11
 #define tamano_particula 40
 #define particulas_maximas 100
-#define delay_maximo 20
 #define volumen_fondo 2     //Maximo dividido por este numero
 
 //Estructura en que se guardaran los recursos necesarios para correr el programa
@@ -35,18 +34,22 @@ typedef struct {
 
     //Surfaces para imprimir en pantalla
     SDL_Surface *surface_colisiones;
-    SDL_Surface *tiempo_transcurrido;
-    SDL_Surface *delay;
-    SDL_Surface *contador;
-    SDL_Surface *screen_surface;
+    SDL_Texture *textura_colisiones;
+
+    SDL_Surface *surface_tiempo;
+    SDL_Texture *textura_tiempo;
+
+    SDL_Surface *surface_contador;
+    SDL_Texture *textura_contador;
 
     //Cuadros de texto para imprimir en pantalla
     SDL_Rect cuadro_texto;
     SDL_Rect cuadro_tiempo_transcurrido;
-    SDL_Rect cuadro_delay;
     SDL_Rect cuadro_contador;
-    //Variable de la ventana donde se imprimira
+    
+    //Variables de la ventana donde se imprimira
     SDL_Window *ventana;
+    SDL_Renderer *render;
 
     //Variable de la Dimencion de la Pantalla
     SDL_DisplayMode DM;
@@ -63,11 +66,9 @@ typedef struct {
     time_t tiempo_inicial;          //Registra el momento en que se inicio el programa
     time_t tiempo_actual;           //Registra el tiempo actual
     time_t tiempo_que_paso;         //Registra el tiempo que paso entre el tiempo inicial y el tiempo actual
-    int DELAY;                      //Controla el Delay de la pantalla
     SDL_Color colorTexto;           //Almacena el color de los textos que se muestran en pantalla
     char texto_colisiones[30];      //Almacena el texto que muestra las colisiones en pantalla
     char texto_tiempo[30];          //Almacena el texto que muestra el tiempo transcurrido en pantalla
-    char texto_delay[30];           //Almacena el texto que muestra el DELAY aplicado en pantalla
     char texto_contador[30];        //Almacena el texto que muestra la cantidad de particulas en pantalla
 
 } Recursos;
@@ -317,11 +318,17 @@ int inicializado_de_recursos(Recursos *recursos) {
         return 1;
     }
 
+    // Crea un renderer asociado a la ventana
+    recursos->render = SDL_CreateRenderer(recursos->ventana, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    if (!recursos->render) {
+        printf("Error al crear el renderer: %s\n", SDL_GetError());
+        SDL_DestroyWindow(recursos->ventana);
+        SDL_Quit();
+        return 1;
+    }
+
     // Maximizo la ventana
     SDL_MaximizeWindow(recursos->ventana);
-
-    //Creo la surface a la ventana
-    recursos->screen_surface = SDL_GetWindowSurface(recursos->ventana);
 
     //Le asigno los valores RGB del texto que se muestra en pantalla
     recursos->colorTexto.r = 250;
@@ -331,36 +338,45 @@ int inicializado_de_recursos(Recursos *recursos) {
 
     //Asigna las posiciones de los cuadros de texto
     recursos->cuadro_texto.x = 0;
-    recursos->cuadro_texto.y = 90;
+    recursos->cuadro_texto.y = 60;
     recursos->cuadro_tiempo_transcurrido.x = 0;
     recursos->cuadro_tiempo_transcurrido.y = 0;
-    recursos->cuadro_delay.x = 0;
-    recursos->cuadro_delay.y = 30;
     recursos->cuadro_contador.x = 0;
-    recursos->cuadro_contador.y = 60;
+    recursos->cuadro_contador.y = 30;
 
     //Inicializo otras variables
     recursos->running = 1;
     recursos->contador_colisiones = 0;
     recursos->tiempo_inicial = time(NULL);
-    recursos->DELAY = 0;
 
     return 0; // Exito al inicializar los recursos 
 }
 
 void finalizacion_de_recursos_y_librerias(SDL_Rect *particulas,Recursos *recursos){
-    //Liberacion de la memoria usada en el programa
+    //Liberacion de la memoria usada en el programa en las particulas
     free(particulas);
-    //Destruccion de la ventana y cierre de SDL
+
+    //Destruccion del font (la fuente del texto)
     TTF_CloseFont(recursos->font);
-    SDL_FreeSurface(recursos->surface_colisiones);
-    SDL_FreeSurface(recursos->tiempo_transcurrido);
-    SDL_FreeSurface(recursos->delay);
-    SDL_FreeSurface(recursos->contador);
-    SDL_FreeSurface(recursos->screen_surface);
-    SDL_DestroyWindow(recursos->ventana);
+
+    //Destruccion de las variables con los audios
     Mix_FreeChunk(recursos->sonido_fondo);
     Mix_FreeChunk(recursos->sonido_golpe);
+
+    //Destruccion de las surfaces
+    SDL_FreeSurface(recursos->surface_colisiones);
+    SDL_FreeSurface(recursos->surface_tiempo);
+    SDL_FreeSurface(recursos->surface_contador);
+
+    // Libera las texturas
+    SDL_DestroyTexture(recursos->textura_colisiones);
+    SDL_DestroyTexture(recursos->textura_tiempo);
+    SDL_DestroyTexture(recursos->textura_contador);
+
+    //Destruccion de la ventana
+    SDL_DestroyWindow(recursos->ventana);
+
+    //Cierre de las librerias de SDL2
     Mix_CloseAudio();
     TTF_Quit();
     SDL_Quit();
@@ -456,16 +472,6 @@ SDL_Rect* control_de_eventos(Recursos *recursos,int *cantidad_particulas,SDL_Rec
                     particulas=destruir_particula(particulas,cantidad_particulas);
                 }
             }
-            else if(key == SDLK_t){
-                if(recursos->DELAY < delay_maximo){    //Solo se puede colocar un DELAY maximo de 100
-                    (recursos->DELAY)++;
-                }
-            }
-            else if(key == SDLK_y){
-                if(recursos->DELAY > 0){     //No puede ser negativo el DELAY
-                    (recursos->DELAY)--;
-                }
-            }
             else if(key == SDLK_r){ //Se reinicia el contador de coliciones
                 recursos->contador_colisiones=0;
             }
@@ -479,42 +485,53 @@ SDL_Rect* control_de_eventos(Recursos *recursos,int *cantidad_particulas,SDL_Rec
     return particulas;
 }
 
-//Funcion de visualizado
-void visualizacion(SDL_Rect *particulas,Recursos *recursos,int cantidad_particulas){
-    //Se actualiza la surface del texto
-    sprintf(recursos->texto_colisiones,"Colisiones: %d",recursos->contador_colisiones);
-    recursos->surface_colisiones = TTF_RenderText_Solid(recursos->font,recursos->texto_colisiones,recursos->colorTexto);
+// Funcion de visualizado
+void visualizacion(SDL_Rect *particulas, Recursos *recursos, int cantidad_particulas) {
+    //Se actualiza la textura del texto
+    sprintf(recursos->texto_colisiones, "Colisiones: %d", recursos->contador_colisiones);
+    recursos->surface_colisiones = TTF_RenderText_Solid(recursos->font, recursos->texto_colisiones, recursos->colorTexto);
+    recursos->textura_colisiones = SDL_CreateTextureFromSurface(recursos->render, recursos->surface_colisiones);
+    recursos->cuadro_texto.w = recursos->surface_colisiones->w;
+    recursos->cuadro_texto.h = recursos->surface_colisiones->h;
+    SDL_FreeSurface(recursos->surface_colisiones);
 
-    //Se actualiza la surface del tiempo transcurrido
+    //Se calcula el tiempo transcurrido
     recursos->tiempo_actual = time(NULL);
     recursos->tiempo_que_paso = recursos->tiempo_actual - recursos->tiempo_inicial;
-    sprintf(recursos->texto_tiempo,"Tiempo transcurrido: %d",(int)recursos->tiempo_que_paso);
-    recursos->tiempo_transcurrido = TTF_RenderText_Solid(recursos->font,recursos->texto_tiempo,recursos->colorTexto);
-    
-    // Se actualiza la superficie del Delay
-    sprintf(recursos->texto_delay,"DELAY: %d",recursos->DELAY);
-    recursos->delay = TTF_RenderText_Solid(recursos->font,recursos->texto_delay,recursos->colorTexto);
+    sprintf(recursos->texto_tiempo, "Tiempo transcurrido: %d", (int)recursos->tiempo_que_paso);
 
-    // Se actualiza la superficie del contador de particulas
-    sprintf(recursos->texto_contador,"Cantidad de Particulas: %d",cantidad_particulas);
-    recursos->contador = TTF_RenderText_Solid(recursos->font,recursos->texto_contador,recursos->colorTexto);
+    //Se actualiza la textura del tiempo transcurrido
+    recursos->surface_tiempo = TTF_RenderText_Solid(recursos->font, recursos->texto_tiempo, recursos->colorTexto);
+    recursos->textura_tiempo = SDL_CreateTextureFromSurface(recursos->render, recursos->surface_tiempo);
+    recursos->cuadro_tiempo_transcurrido.w=recursos->surface_tiempo->w;
+    recursos->cuadro_tiempo_transcurrido.h=recursos->surface_tiempo->h;
+    SDL_FreeSurface(recursos->surface_tiempo);
+
+    //Se actualiza la textura del contador de particulas
+    sprintf(recursos->texto_contador, "Cantidad de Particulas: %d", cantidad_particulas);
+    recursos->surface_contador = TTF_RenderText_Solid(recursos->font, recursos->texto_contador, recursos->colorTexto);
+    recursos->textura_contador = SDL_CreateTextureFromSurface(recursos->render, recursos->surface_contador);
+    recursos->cuadro_contador.w = recursos->surface_contador->w;
+    recursos->cuadro_contador.h = recursos->surface_contador->h;
+    SDL_FreeSurface(recursos->surface_contador);
 
     //Limpia la ventana
-    SDL_FillRect(recursos->screen_surface, NULL, SDL_MapRGB(recursos->screen_surface->format, 0, 0, 0));
-    
+    SDL_SetRenderDrawColor(recursos->render, 0, 0, 0, 255);
+    SDL_RenderClear(recursos->render);
+
     //Se agregan las particulas a la pantalla
-    for(int i=0;i<cantidad_particulas;i++){
-        SDL_FillRect(recursos->screen_surface, &particulas[i], SDL_MapRGB(recursos->screen_surface->format, 240, 50, 250));
+    for (int i = 0; i < cantidad_particulas; i++) {
+        SDL_SetRenderDrawColor(recursos->render, 240, 50, 250, 255);
+        SDL_RenderFillRect(recursos->render, &particulas[i]);
     }
 
     //Se agrega el Texto a la pantalla
-    SDL_BlitSurface(recursos->surface_colisiones, NULL, recursos->screen_surface, &(recursos->cuadro_texto));
-    SDL_BlitSurface(recursos->tiempo_transcurrido, NULL, recursos->screen_surface, &(recursos->cuadro_tiempo_transcurrido));
-    SDL_BlitSurface(recursos->delay, NULL, recursos->screen_surface, &(recursos->cuadro_delay));
-    SDL_BlitSurface(recursos->contador, NULL, recursos->screen_surface, &(recursos->cuadro_contador));
-    
-    //Se imprime la pantalla
-    SDL_UpdateWindowSurface(recursos->ventana);
+    SDL_RenderCopy(recursos->render, recursos->textura_colisiones, NULL, &(recursos->cuadro_texto));
+    SDL_RenderCopy(recursos->render, recursos->textura_tiempo, NULL, &(recursos->cuadro_tiempo_transcurrido));
+    SDL_RenderCopy(recursos->render, recursos->textura_contador, NULL, &(recursos->cuadro_contador));
+
+    // Se imprime la pantalla
+    SDL_RenderPresent(recursos->render);
 }
 
 //Funciones que tienen que ver con las colisiones
@@ -714,9 +731,6 @@ int main(int argc,char *argv[]){
 
         //Calculo de la siguiente posicion y actualizacion de las direcciones de las particulas
         colisiones(&recursos,particulas,cantidad_particulas);
-
-        //Aplicaciondel DELAY que desee el usuario (Se modifica en la parte de los eventos)
-        SDL_Delay(recursos.DELAY);
     }
     
     finalizacion_de_recursos_y_librerias(particulas,&recursos);
