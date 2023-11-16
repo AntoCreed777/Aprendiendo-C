@@ -17,8 +17,8 @@
 #define CARACTERESMAXIMOS 100000
 #define modulo_direccion 8
 #define modulo_peso 11
-#define tamano_particula 250
-#define particulas_maximas 2000
+#define tamano_particula 2
+#define particulas_maximas 6000
 #define volumen_fondo 2     //Maximo dividido por este numero
 
 //Estructura en que se guardaran los recursos necesarios para correr el programa
@@ -555,7 +555,7 @@ void visualizacion(SDL_Rect *particulas, Recursos *recursos, int cantidad_partic
     //Se calcula el tiempo transcurrido
     recursos->tiempo_actual = time(NULL);
     recursos->tiempo_que_paso = recursos->tiempo_actual - recursos->tiempo_inicial;
-    sprintf(recursos->texto_tiempo, "Tiempo transcurrido: %d", (int)recursos->tiempo_que_paso);
+    sprintf(recursos->texto_tiempo, "Tiempo transcurrido: %d min %d s", (int)recursos->tiempo_que_paso/60,(int)recursos->tiempo_que_paso%60);
 
     //Se actualiza la textura del tiempo transcurrido
     recursos->surface_tiempo = TTF_RenderText_Solid(recursos->font, recursos->texto_tiempo, recursos->colorTexto);
@@ -654,10 +654,20 @@ void colisiones(Recursos *recursos, SDL_Rect *particulas, int cantidad_particula
                 //if(particulas[i].p <= particulas[j].p){         //Si es de peso menor
                     if(pared == 0){             //Si no choca con una pared
                         colision_particulas(&particulas[i],&particulas[j],recursos);
+                        //movimiento_particula(&particulas[i]);
                     }
                     else{       //Si choca con una pared y particula a la vez
-                        particulas[i].dx=0;
-                        particulas[i].dy=0;
+                        //Les invierto la direccion para que se vallan de ahi
+                        particulas[i].dx*=-1;
+                        particulas[i].dy*=-1;
+                        particulas[j].dx*=-1;
+                        particulas[j].dy*=-1;
+
+                        //La muevo otra ves para que no este pegada a la pared, para que no vuelva a cambiar su direccion
+                        movimiento_particula(&particulas[i]);
+                        //La que no toca la pared la muevo un ves mas para que no sigan intersectadas
+                        movimiento_particula(&particulas[j]);
+                        movimiento_particula(&particulas[j]);
                     }
                     recursos->contador_colisiones++;
                     choca_particula=1;
