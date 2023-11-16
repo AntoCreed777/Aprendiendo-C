@@ -17,7 +17,7 @@
 #define CARACTERESMAXIMOS 100000
 #define modulo_direccion 8
 #define modulo_peso 11
-#define tamano_particula 250
+#define tamano_particula 50
 #define particulas_maximas 6000
 #define volumen_fondo 2     //Maximo dividido por este numero
 
@@ -41,6 +41,9 @@ typedef struct {
 
     SDL_Surface *surface_contador;
     SDL_Texture *textura_contador;
+
+    SDL_Surface *surface_peso;
+    SDL_Texture *textura_peso;
 
     //Cuadros de texto para imprimir en pantalla
     SDL_Rect cuadro_texto;
@@ -70,6 +73,7 @@ typedef struct {
     char texto_colisiones[30];      //Almacena el texto que muestra las colisiones en pantalla
     char texto_tiempo[30];          //Almacena el texto que muestra el tiempo transcurrido en pantalla
     char texto_contador[30];        //Almacena el texto que muestra la cantidad de particulas en pantalla
+    char texto_peso[20];            //Almacena el texto que muestra el peso de las particulas
 
 } Recursos;
 
@@ -405,11 +409,13 @@ void finalizacion_de_recursos_y_librerias(SDL_Rect *particulas,Recursos *recurso
     SDL_FreeSurface(recursos->surface_colisiones);
     SDL_FreeSurface(recursos->surface_tiempo);
     SDL_FreeSurface(recursos->surface_contador);
+    SDL_FreeSurface(recursos->surface_peso);
 
     // Libera las texturas
     SDL_DestroyTexture(recursos->textura_colisiones);
     SDL_DestroyTexture(recursos->textura_tiempo);
     SDL_DestroyTexture(recursos->textura_contador);
+    SDL_DestroyTexture(recursos->textura_peso);
 
     //Destruccion de la ventana
     SDL_DestroyWindow(recursos->ventana);
@@ -580,6 +586,12 @@ void visualizacion(SDL_Rect *particulas, Recursos *recursos, int cantidad_partic
     for (int i = 0; i < cantidad_particulas; i++) {
         SDL_SetRenderDrawColor(recursos->render, 240, 50, 250, 255);
         SDL_RenderFillRect(recursos->render, &particulas[i]);
+
+        sprintf(recursos->texto_peso, "%d", particulas[i].p);
+        recursos->surface_peso = TTF_RenderText_Solid(recursos->font, recursos->texto_peso, recursos->colorTexto);
+        recursos->textura_peso = SDL_CreateTextureFromSurface(recursos->render, recursos->surface_peso);
+        SDL_FreeSurface(recursos->surface_peso);
+        SDL_RenderCopy(recursos->render, recursos->textura_peso, NULL, &(particulas[i]));
     }
 
     //Se agrega el Texto a la pantalla
