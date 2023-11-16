@@ -17,7 +17,7 @@
 #define CARACTERESMAXIMOS 100000
 #define modulo_direccion 8
 #define modulo_peso 11
-#define tamano_particula 2
+#define tamano_particula 250
 #define particulas_maximas 6000
 #define volumen_fondo 2     //Maximo dividido por este numero
 
@@ -651,26 +651,28 @@ void colisiones(Recursos *recursos, SDL_Rect *particulas, int cantidad_particula
         //Colison con una particula
         for (int j = 0; j < cantidad_particulas; j++) {
             if (i != j && SDL_HasIntersection(&particulas[i], &particulas[j])) {    //Si choca con una particula
-                //if(particulas[i].p <= particulas[j].p){         //Si es de peso menor
-                    if(pared == 0){             //Si no choca con una pared
-                        colision_particulas(&particulas[i],&particulas[j],recursos);
-                        //movimiento_particula(&particulas[i]);
-                    }
-                    else{       //Si choca con una pared y particula a la vez
-                        //Les invierto la direccion para que se vallan de ahi
-                        particulas[i].dx*=-1;
-                        particulas[i].dy*=-1;
-                        particulas[j].dx*=-1;
-                        particulas[j].dy*=-1;
+                if(pared != 0){         //Si choca con una pared y particula a la vez, esto es independiente del peso que posean
+                    //Les invierto la direccion para que se vallan de ahi
+                    if(pared == 1)particulas[i].dx*=-1;                         //Invierto la direccion en X
+                    if(pared == 1)particulas[j].dx*=-1;                         //Invierto la direccion en X
 
-                        //La muevo otra ves para que no este pegada a la pared, para que no vuelva a cambiar su direccion
-                        movimiento_particula(&particulas[i]);
-                        //La que no toca la pared la muevo un ves mas para que no sigan intersectadas
-                        movimiento_particula(&particulas[j]);
-                        movimiento_particula(&particulas[j]);
-                    }
-                    recursos->contador_colisiones++;
-                    choca_particula=1;
+                    if(pared == 2)particulas[i].dy*=-1;                         //Invierto la direccion en Y
+                    if(pared == 2)particulas[j].dy*=-1;                         //Invierto la direccion en Y
+
+                    //La muevo otra ves para que no este pegada a la pared, para que no vuelva a cambiar su direccion
+                    movimiento_particula(&particulas[i]);
+                    //La que no toca la pared la muevo un ves mas para que no sigan intersectadas
+                    movimiento_particula(&particulas[j]);
+                    movimiento_particula(&particulas[j]);
+                }
+
+                //if(particulas[i].p <= particulas[j].p){         //Si es de peso menor
+                else {             //Si no choca con una pared
+                    colision_particulas(&particulas[i],&particulas[j],recursos);
+                    //movimiento_particula(&particulas[i]);
+                }
+                recursos->contador_colisiones++;
+                choca_particula=1;
                 //}
             }
         }
