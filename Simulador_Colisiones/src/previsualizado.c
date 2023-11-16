@@ -591,25 +591,10 @@ void visualizacion(SDL_Rect *particulas, Recursos *recursos, int cantidad_partic
     SDL_RenderPresent(recursos->render);
 }
 
-//Funciones que tienen que ver con las colisiones
-int deteccion_colision_borde(SDL_Rect *particula, Recursos *recursos) {  //Colicion con algun borde de la ventana
-    if(particula->x < 0 || particula->x > recursos->DM.w-tamano_particula){                       //Borde Izquierdo o Derecho
-        particula->dx*=-1;
-        if(particula->y < 0 || particula->y > recursos->DM.h-tamano_particula){
-            particula->dy*=-1;
-        }
-        Mix_PlayChannel(2,recursos->sonido_pared, 0);
-        return 1;
-    }
-    if(particula->y < 0 || particula->y > recursos->DM.h-tamano_particula){                       //Borde Superior o Inferior
-        particula->dy*=-1;
-        if(particula->x < 0 || particula->x > recursos->DM.w-tamano_particula){
-            particula->dx*=-1;
-        }
-        Mix_PlayChannel(2,recursos->sonido_pared, 0);
-        return 1;
-    }
-    return 0;
+void movimiento_particula(SDL_Rect *particula){
+    //Movimiento +1
+    particula->x+=particula->dx;
+    particula->y+=particula->dy;
 }
 
 void colision_particulas(SDL_Rect *particula1, SDL_Rect *particula2, Recursos *recursos) {
@@ -654,35 +639,43 @@ void colision_particulas(SDL_Rect *particula1, SDL_Rect *particula2, Recursos *r
     asignacion_direcciones(particula1,aux_direccion);
 }
 
-void movimiento_particula(SDL_Rect *particula){
-    //Movimiento +1
-    particula->x+=particula->dx;
-    particula->y+=particula->dy;
-}
-
 void colisiones(Recursos *recursos, SDL_Rect *particulas, int cantidad_particulas) {
-    for (int i = 0; i < cantidad_particulas; i++) {
-        //Detecta la colicion con una pared
-        int pared = deteccion_colision_borde(&particulas[i], recursos);
+    //Recorro las particulas para ver con que chocan
+    for(int i=0;i<cantidad_particulas;i++){
+        int pared=0,choca_particula=0;     //Variables de control de choque
+
+        //Colision con alguna pared
+        if(particulas[i].x < 0 || particulas[i].x > recursos->DM.w-tamano_particula){pared += 1;}   //Paredes Verticales
+        if(particulas[i].y < 0 || particulas[i].y > recursos->DM.h-tamano_particula){pared += 2;}   //Paredes Horizontales
+
+        //Colison con una particula
         for (int j = 0; j < cantidad_particulas; j++) {
-            if (i != j && particulas[i].p<=particulas[j].p && SDL_HasIntersection(&particulas[i], &particulas[j]) && !pared) {
-                //Funcion que detecta las colisiones de las particulas
-                colision_particulas(&particulas[i], &particulas[j], recursos);
-
-                // Reproducir sonido de golpe
-                Mix_PlayChannel(1,recursos->sonido_golpe, 0);
-
-                //Aumenta el contador de coliciones
-                recursos->contador_colisiones++;
-
-                //Movimiento extra para salir de la interseccion
-                movimiento_particula(&particulas[i]);
+            if (i != j && SDL_HasIntersection(&particulas[i], &particulas[j])) {    //Si choca con una particula
+                //if(particulas[i].p <= particulas[j].p){         //Si es de peso menor
+                    if(pared == 0){             //Si no choca con una pared
+                        colision_particulas(&particulas[i],&particulas[j],recursos);
+                    }
+                    else{       //Si choca con una pared y particula a la vez
+                        particulas[i].dx=0;
+                        particulas[i].dy=0;
+                    }
+                    recursos->contador_colisiones++;
+                    choca_particula=1;
+                //}
             }
         }
+
+        //Si la particula solamente choco con la pared
+        if((pared != 0) && (choca_particula == 0)){
+            if(pared == 1)particulas[i].dx*=-1;                         //Invierto la direccion en X
+            if(pared == 2)particulas[i].dy*=-1;                         //Invierto la direccion en Y
+            if(pared == 3){particulas[i].dx*=-1;particulas[i].dy*=-1;}  //Invierto la direccion en X e Y
+            Mix_PlayChannel(2,recursos->sonido_pared, 0);               //Reprodusco el sonido de choque con la pared
+        }
+
     }
 
-    // Movimiento +1
-    for (int i = 0; i < cantidad_particulas; i++) {
+    for(int i=0;i<cantidad_particulas;i++){
         movimiento_particula(&particulas[i]);
     }
 }
