@@ -17,9 +17,10 @@
 #define CARACTERESMAXIMOS 100000
 #define modulo_direccion 8
 #define modulo_peso 11
-#define tamano_particula 50
+#define tamano_particula 250
 #define particulas_maximas 6000
-#define volumen_fondo 2     //Maximo dividido por este numero
+#define volumen_fondo 10     //Maximo dividido por este numero
+#define genera_particulas 1
 
 //Estructura en que se guardaran los recursos necesarios para correr el programa
 typedef struct {
@@ -526,8 +527,10 @@ SDL_Rect* control_de_eventos(Recursos *recursos,int *cantidad_particulas,SDL_Rec
                 guardado(particulas,(*cantidad_particulas));
             }
             else if(key == SDLK_m){
-                if((*cantidad_particulas) < particulas_maximas){   //El limite de pariculas en pantalla
-                    particulas = crear_particula(particulas,cantidad_particulas,recursos->DM);
+                for(int i=0; i<genera_particulas;i++){
+                    if((*cantidad_particulas) < particulas_maximas){   //El limite de pariculas en pantalla
+                        particulas = crear_particula(particulas,cantidad_particulas,recursos->DM);
+                    }
                 }
             }
             else if(key == SDLK_k){
@@ -677,15 +680,13 @@ void colisiones(Recursos *recursos, SDL_Rect *particulas, int cantidad_particula
                     movimiento_particula(&particulas[j]);
                     movimiento_particula(&particulas[j]);
                 }
-
-                //if(particulas[i].p <= particulas[j].p){         //Si es de peso menor
-                else {             //Si no choca con una pared
+                //if(particulas[i].p <= particulas[j].p)
+                else {             //Si no choca con una pared y si es de peso menor
                     colision_particulas(&particulas[i],&particulas[j],recursos);
-                    //movimiento_particula(&particulas[i]);
+                    movimiento_particula(&particulas[i]);
                 }
                 recursos->contador_colisiones++;
                 choca_particula=1;
-                //}
             }
         }
 
