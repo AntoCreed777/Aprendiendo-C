@@ -19,7 +19,7 @@
 #define modulo_peso 11
 #define tamano_particula 250
 #define particulas_maximas 6000
-#define volumen_fondo 10     //Maximo dividido por este numero
+#define volumen_fondo 2     //Maximo dividido por este numero
 #define genera_particulas 1
 
 //Estructura en que se guardaran los recursos necesarios para correr el programa
@@ -405,6 +405,7 @@ void finalizacion_de_recursos_y_librerias(SDL_Rect *particulas,Recursos *recurso
     //Destruccion de las variables con los audios
     Mix_FreeChunk(recursos->sonido_fondo);
     Mix_FreeChunk(recursos->sonido_golpe);
+    Mix_FreeChunk(recursos->sonido_pared);
 
     //Destruccion de las surfaces
     SDL_FreeSurface(recursos->surface_colisiones);
@@ -618,16 +619,16 @@ void colision_particulas(SDL_Rect *particula1, SDL_Rect *particula2, Recursos *r
     SDL_IntersectRect(particula1, particula2, &interseccion);              //Extraigo la interseccion
 
     //Detecto donde se transpazo el limite de la particula
-    if(interseccion.y == particula1->y){                                         // La intersección esta en la parte superior de la particula
+    if(interseccion.y == particula1->y){                                        // La intersección esta en la parte superior de la particula
         arriba=1;
     }
-    if(interseccion.y + interseccion.h == particula1->y + particula1->h){      //La interseccion esta en la parte inferior de la particula
+    if(interseccion.y + interseccion.h == particula1->y + particula1->h){       //La interseccion esta en la parte inferior de la particula
         abajo=1;
     }
-    if(interseccion.x == particula1->x){                                         //La interseccion esta en la parte izquierda de la particula
+    if(interseccion.x == particula1->x){                                        //La interseccion esta en la parte izquierda de la particula
         izquierda=1;
     }
-    if(interseccion.x + interseccion.w == particula1->x + particula1->w){      //La interseccion esta en la parte derecha de la particula
+    if(interseccion.x + interseccion.w == particula1->x + particula1->w){       //La interseccion esta en la parte derecha de la particula
         derecha=1;
     }
 
@@ -680,13 +681,16 @@ void colisiones(Recursos *recursos, SDL_Rect *particulas, int cantidad_particula
                     movimiento_particula(&particulas[j]);
                     movimiento_particula(&particulas[j]);
                 }
-                //if(particulas[i].p <= particulas[j].p)
-                else {             //Si no choca con una pared y si es de peso menor
+                
+                else if(particulas[i].p <= particulas[j].p){             //Si no choca con una pared y si es de peso menor
                     colision_particulas(&particulas[i],&particulas[j],recursos);
-                    movimiento_particula(&particulas[i]);
+                    movimiento_particula(&particulas[i]);   //Para que se salga de la interseccion
                 }
                 recursos->contador_colisiones++;
                 choca_particula=1;
+
+                //Comienzo la reproduccion del sonido de fondo
+                Mix_PlayChannel(1, recursos->sonido_golpe, 0);
             }
         }
 
