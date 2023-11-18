@@ -690,7 +690,7 @@ void colisiones(Recursos *recursos, SDL_Rect *particulas, int cantidad_particula
                 choca_particula=1;
 
                 //Comienzo la reproduccion del sonido de fondo
-                Mix_PlayChannel(1, recursos->sonido_golpe, 0);
+                if(cantidad_particulas <100)Mix_PlayChannel(1, recursos->sonido_golpe, 0);
             }
         }
 
@@ -699,7 +699,7 @@ void colisiones(Recursos *recursos, SDL_Rect *particulas, int cantidad_particula
             if(pared == 1)particulas[i].dx*=-1;                         //Invierto la direccion en X
             if(pared == 2)particulas[i].dy*=-1;                         //Invierto la direccion en Y
             if(pared == 3){particulas[i].dx*=-1;particulas[i].dy*=-1;}  //Invierto la direccion en X e Y
-            Mix_PlayChannel(2,recursos->sonido_pared, 0);               //Reprodusco el sonido de choque con la pared
+            if(cantidad_particulas <100)Mix_PlayChannel(2,recursos->sonido_pared, 0);               //Reprodusco el sonido de choque con la pared
         }
 
     }
