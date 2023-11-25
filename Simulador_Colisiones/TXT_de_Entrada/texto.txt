@@ -1,1 +1,0 @@
-tEl primer objeto fue encontrado en la coordenada (40,50), mientras que otros dos fueron hallados en los puntos (55,55) y (0,0). Un cuarto objeto fue avistado en la coordenada invalida (80,80)
