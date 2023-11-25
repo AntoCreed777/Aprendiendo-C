@@ -406,12 +406,6 @@ void finalizacion_de_recursos_y_librerias(SDL_Rect *particulas,Recursos *recurso
     Mix_FreeChunk(recursos->sonido_golpe);
     Mix_FreeChunk(recursos->sonido_pared);
 
-    //Destruccion de las surfaces
-    SDL_FreeSurface(recursos->surface_colisiones);
-    SDL_FreeSurface(recursos->surface_tiempo);
-    SDL_FreeSurface(recursos->surface_contador);
-    SDL_FreeSurface(recursos->surface_peso);
-
     // Libera las texturas
     SDL_DestroyTexture(recursos->textura_colisiones);
     SDL_DestroyTexture(recursos->textura_tiempo);
@@ -419,6 +413,7 @@ void finalizacion_de_recursos_y_librerias(SDL_Rect *particulas,Recursos *recurso
     SDL_DestroyTexture(recursos->textura_peso);
 
     //Destruccion de la ventana
+    SDL_DestroyRenderer(recursos->render);
     SDL_DestroyWindow(recursos->ventana);
 
     //Cierre de las librerias de SDL2
