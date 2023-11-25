@@ -36,7 +36,7 @@ typedef struct {
 
     //Guardara el video de inicio
     IMG_Animation *anim;
-    
+
     //Surfaces para imprimir en pantalla
     SDL_Surface *surface_colisiones;
     SDL_Texture *textura_colisiones;
@@ -359,7 +359,29 @@ int inicializado_de_recursos(Recursos *recursos) {
     //Obtengo la dimension de la pantalla y la guardo en su respectiva variable
     SDL_GetCurrentDisplayMode(0, &recursos->DM);
 
+    //Le asigno los valores RGB del texto que se muestra en pantalla
+    recursos->colorTexto.r = 250;
+    recursos->colorTexto.g = 170;
+    recursos->colorTexto.b = 50;
+    recursos->colorTexto.a = 255;
 
+    //Asigna las posiciones de los cuadros de texto
+    recursos->cuadro_texto.x = 0;
+    recursos->cuadro_texto.y = 60;
+    recursos->cuadro_tiempo_transcurrido.x = 0;
+    recursos->cuadro_tiempo_transcurrido.y = 0;
+    recursos->cuadro_contador.x = 0;
+    recursos->cuadro_contador.y = 30;
+
+    //Inicializo otras variables
+    recursos->running = 1;
+    recursos->contador_colisiones = 0;
+    recursos->tiempo_inicial = time(NULL);
+
+    return 0; // Exito al inicializar los recursos 
+}
+
+int creacion_ventana(Recursos *recursos){
     //Inicio la ventana en su respectiva variable
     recursos->ventana = SDL_CreateWindow("Desplegable", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                                         recursos->DM.w, recursos->DM.h, SDL_WINDOW_BORDERLESS | SDL_WINDOW_SHOWN);
@@ -383,26 +405,7 @@ int inicializado_de_recursos(Recursos *recursos) {
     // Maximizo la ventana
     SDL_MaximizeWindow(recursos->ventana);
 
-    //Le asigno los valores RGB del texto que se muestra en pantalla
-    recursos->colorTexto.r = 250;
-    recursos->colorTexto.g = 170;
-    recursos->colorTexto.b = 50;
-    recursos->colorTexto.a = 255;
-
-    //Asigna las posiciones de los cuadros de texto
-    recursos->cuadro_texto.x = 0;
-    recursos->cuadro_texto.y = 60;
-    recursos->cuadro_tiempo_transcurrido.x = 0;
-    recursos->cuadro_tiempo_transcurrido.y = 0;
-    recursos->cuadro_contador.x = 0;
-    recursos->cuadro_contador.y = 30;
-
-    //Inicializo otras variables
-    recursos->running = 1;
-    recursos->contador_colisiones = 0;
-    recursos->tiempo_inicial = time(NULL);
-
-    return 0; // Exito al inicializar los recursos 
+    return 0;
 }
 
 void finalizacion_de_recursos_y_librerias(SDL_Rect *particulas,Recursos *recursos){
@@ -563,6 +566,11 @@ SDL_Rect* control_de_eventos(Recursos *recursos,int *cantidad_particulas,SDL_Rec
 }
 
 // Funcion de visualizado
+int animacion_inicio(Recursos *recursos){
+
+    return 0;
+}
+
 void visualizacion(SDL_Rect *particulas, Recursos *recursos, int cantidad_particulas) {
     //Se actualiza la textura del texto
     sprintf(recursos->texto_colisiones, "Colisiones: %d", recursos->contador_colisiones);
@@ -739,6 +747,15 @@ int main(int argc,char *argv[]){
         return 0;
     }
 
+    //Inicializacion de la ventana de la simulacion
+    if(creacion_ventana(&recursos) == 1){
+        free(particulas);
+        Mix_CloseAudio();
+        TTF_Quit();
+        SDL_Quit();
+        return 0;
+    }
+    
     //Ciclo de la simulacion
     while(recursos.running == 1){
         //Verifico los posibles eventos que esten ocurriendo(Alguna pulsacion de tecla, etc)
