@@ -366,6 +366,7 @@ int inicializado_de_recursos(Recursos *recursos) {
     if (!recursos->render) {
         printf("Error al crear el renderer: %s\n", SDL_GetError());
         SDL_DestroyWindow(recursos->ventana);
+        SDL_Quit();
         return 1;
     }
 
