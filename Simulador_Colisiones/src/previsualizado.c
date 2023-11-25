@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,6 +34,9 @@ typedef struct {
     //Variable para la fuente del texto
     TTF_Font *font;
 
+    //Guardara el video de inicio
+    IMG_Animation *anim;
+
     //Surfaces para imprimir en pantalla
     SDL_Surface *surface_colisiones;
     SDL_Texture *textura_colisiones;
@@ -46,14 +50,18 @@ typedef struct {
     SDL_Surface *surface_peso;
     SDL_Texture *textura_peso;
 
+    SDL_Texture **textura_intro;
+
     //Cuadros de texto para imprimir en pantalla
     SDL_Rect cuadro_texto;
     SDL_Rect cuadro_tiempo_transcurrido;
     SDL_Rect cuadro_contador;
     
-    //Variables de la ventana donde se imprimira
+    //Variables de ventanas donde se imprimira
     SDL_Window *ventana;
     SDL_Renderer *render;
+    SDL_Window *ventana_intro;
+    SDL_Renderer *render_intro;
 
     //Variable de la Dimencion de la Pantalla
     SDL_DisplayMode DM;
@@ -75,6 +83,8 @@ typedef struct {
     char texto_tiempo[30];          //Almacena el texto que muestra el tiempo transcurrido en pantalla
     char texto_contador[30];        //Almacena el texto que muestra la cantidad de particulas en pantalla
     char texto_peso[20];            //Almacena el texto que muestra el peso de las particulas
+    int frame_actual;               //Almacena el frame en que se encuentra el video
+    int delay_intro;                //Almacena el delay entre frame del video
 
 } Recursos;
 
@@ -349,7 +359,29 @@ int inicializado_de_recursos(Recursos *recursos) {
     //Obtengo la dimension de la pantalla y la guardo en su respectiva variable
     SDL_GetCurrentDisplayMode(0, &recursos->DM);
 
+    //Le asigno los valores RGB del texto que se muestra en pantalla
+    recursos->colorTexto.r = 250;
+    recursos->colorTexto.g = 170;
+    recursos->colorTexto.b = 50;
+    recursos->colorTexto.a = 255;
 
+    //Asigna las posiciones de los cuadros de texto
+    recursos->cuadro_texto.x = 0;
+    recursos->cuadro_texto.y = 60;
+    recursos->cuadro_tiempo_transcurrido.x = 0;
+    recursos->cuadro_tiempo_transcurrido.y = 0;
+    recursos->cuadro_contador.x = 0;
+    recursos->cuadro_contador.y = 30;
+
+    //Inicializo otras variables
+    recursos->running = 1;
+    recursos->contador_colisiones = 0;
+    recursos->tiempo_inicial = time(NULL);
+
+    return 0; // Exito al inicializar los recursos 
+}
+
+int creacion_ventana(Recursos *recursos){
     //Inicio la ventana en su respectiva variable
     recursos->ventana = SDL_CreateWindow("Desplegable", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                                         recursos->DM.w, recursos->DM.h, SDL_WINDOW_BORDERLESS | SDL_WINDOW_SHOWN);
@@ -372,26 +404,7 @@ int inicializado_de_recursos(Recursos *recursos) {
     // Maximizo la ventana
     SDL_MaximizeWindow(recursos->ventana);
 
-    //Le asigno los valores RGB del texto que se muestra en pantalla
-    recursos->colorTexto.r = 250;
-    recursos->colorTexto.g = 170;
-    recursos->colorTexto.b = 50;
-    recursos->colorTexto.a = 255;
-
-    //Asigna las posiciones de los cuadros de texto
-    recursos->cuadro_texto.x = 0;
-    recursos->cuadro_texto.y = 60;
-    recursos->cuadro_tiempo_transcurrido.x = 0;
-    recursos->cuadro_tiempo_transcurrido.y = 0;
-    recursos->cuadro_contador.x = 0;
-    recursos->cuadro_contador.y = 30;
-
-    //Inicializo otras variables
-    recursos->running = 1;
-    recursos->contador_colisiones = 0;
-    recursos->tiempo_inicial = time(NULL);
-
-    return 0; // Exito al inicializar los recursos 
+    return 0;
 }
 
 void finalizacion_de_recursos_y_librerias(SDL_Rect *particulas,Recursos *recursos){
@@ -417,9 +430,6 @@ void finalizacion_de_recursos_y_librerias(SDL_Rect *particulas,Recursos *recurso
     SDL_DestroyTexture(recursos->textura_tiempo);
     SDL_DestroyTexture(recursos->textura_contador);
     SDL_DestroyTexture(recursos->textura_peso);
-
-    //Destruccion de la ventana
-    SDL_DestroyWindow(recursos->ventana);
 
     //Cierre de las librerias de SDL2
     Mix_CloseAudio();
@@ -552,6 +562,11 @@ SDL_Rect* control_de_eventos(Recursos *recursos,int *cantidad_particulas,SDL_Rec
 }
 
 // Funcion de visualizado
+int animacion_inicio(Recursos *recursos){
+
+    return 0;
+}
+
 void visualizacion(SDL_Rect *particulas, Recursos *recursos, int cantidad_particulas) {
     //Se actualiza la textura del texto
     sprintf(recursos->texto_colisiones, "Colisiones: %d", recursos->contador_colisiones);
@@ -728,6 +743,18 @@ int main(int argc,char *argv[]){
         return 0;
     }
 
+    //Inicializacion de los recursos
+    if(animacion_inicio(&recursos) == 1){
+        finalizacion_de_recursos_y_librerias(particulas,&recursos);
+        return 0;
+    }
+
+    //Inicializacion de la ventana de la simulacion
+    if(creacion_ventana(&recursos) == 1){
+        finalizacion_de_recursos_y_librerias(particulas,&recursos);
+        return 0;
+    }
+
     //Ciclo de la simulacion
     while(recursos.running == 1){
         //Verifico los posibles eventos que esten ocurriendo(Alguna pulsacion de tecla, etc)
@@ -741,6 +768,9 @@ int main(int argc,char *argv[]){
     }
     
     finalizacion_de_recursos_y_librerias(particulas,&recursos);
+
+    //Destruccion de la ventana
+    SDL_DestroyWindow(recursos.ventana);
 
     return 0;
 }
