@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,6 +34,9 @@ typedef struct {
     //Variable para la fuente del texto
     TTF_Font *font;
 
+    //Guardara el video de inicio
+    IMG_Animation *anim;
+    
     //Surfaces para imprimir en pantalla
     SDL_Surface *surface_colisiones;
     SDL_Texture *textura_colisiones;
@@ -46,14 +50,18 @@ typedef struct {
     SDL_Surface *surface_peso;
     SDL_Texture *textura_peso;
 
+    SDL_Texture **textura_intro;
+
     //Cuadros de texto para imprimir en pantalla
     SDL_Rect cuadro_texto;
     SDL_Rect cuadro_tiempo_transcurrido;
     SDL_Rect cuadro_contador;
     
-    //Variables de la ventana donde se imprimira
+    //Variables de ventanas donde se imprimira
     SDL_Window *ventana;
     SDL_Renderer *render;
+    SDL_Window *ventana_intro;
+    SDL_Renderer *render_intro;
 
     //Variable de la Dimencion de la Pantalla
     SDL_DisplayMode DM;
@@ -75,6 +83,8 @@ typedef struct {
     char texto_tiempo[30];          //Almacena el texto que muestra el tiempo transcurrido en pantalla
     char texto_contador[30];        //Almacena el texto que muestra la cantidad de particulas en pantalla
     char texto_peso[20];            //Almacena el texto que muestra el peso de las particulas
+    int frame_actual;               //Almacena el frame en que se encuentra el video
+    int delay_intro;                //Almacena el delay entre frame del video
 
 } Recursos;
 
