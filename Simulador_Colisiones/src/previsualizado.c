@@ -432,9 +432,6 @@ void finalizacion_de_recursos_y_librerias(SDL_Rect *particulas,Recursos *recurso
     SDL_DestroyTexture(recursos->textura_contador);
     SDL_DestroyTexture(recursos->textura_peso);
 
-    //Destruccion de la ventana
-    SDL_DestroyWindow(recursos->ventana);
-
     //Cierre de las librerias de SDL2
     Mix_CloseAudio();
     TTF_Quit();
@@ -747,15 +744,18 @@ int main(int argc,char *argv[]){
         return 0;
     }
 
-    //Inicializacion de la ventana de la simulacion
-    if(creacion_ventana(&recursos) == 1){
-        free(particulas);
-        Mix_CloseAudio();
-        TTF_Quit();
-        SDL_Quit();
+    //Inicializacion de los recursos
+    if(animacion_inicio(&recursos) == 1){
+        finalizacion_de_recursos_y_librerias(particulas,&recursos);
         return 0;
     }
-    
+
+    //Inicializacion de la ventana de la simulacion
+    if(creacion_ventana(&recursos) == 1){
+        finalizacion_de_recursos_y_librerias(particulas,&recursos);
+        return 0;
+    }
+
     //Ciclo de la simulacion
     while(recursos.running == 1){
         //Verifico los posibles eventos que esten ocurriendo(Alguna pulsacion de tecla, etc)
@@ -769,6 +769,9 @@ int main(int argc,char *argv[]){
     }
     
     finalizacion_de_recursos_y_librerias(particulas,&recursos);
+
+    //Destruccion de la ventana
+    SDL_DestroyWindow(recursos.ventana);
 
     return 0;
 }
