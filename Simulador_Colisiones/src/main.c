@@ -1,178 +1,73 @@
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_main.h>
-#include <SDL2/SDL_image.h>
+#include <stdio.h>
+#include <stdlib.h>
 
+#define DELAY 5
 
-/* Draw a Gimpish background pattern to show transparency in the image */
-static void draw_background(SDL_Renderer *renderer, int w, int h)
-{
-    SDL_Color col[2] = {
-        { 0x66, 0x66, 0x66, 0xff },
-        { 0x99, 0x99, 0x99, 0xff },
-    };
-    int i, x, y;
-    SDL_FRect rect;
-    const int dx = 8, dy = 8;
-
-    rect.w = (float)dx;
-    rect.h = (float)dy;
-    for (y = 0; y < h; y += dy) {
-        for (x = 0; x < w; x += dx) {
-            /* use an 8x8 checkerboard pattern */
-            i = (((x ^ y) >> 3) & 1);
-            SDL_SetRenderDrawColor(renderer, col[i].r, col[i].g, col[i].b, col[i].a);
-
-            rect.x = (float)x;
-            rect.y = (float)y;
-            SDL_RenderFillRect(renderer, &rect);
-        }
-    }
-}
-
-int main(int argc, char *argv[])
-{
-    SDL_Window *window;
-    SDL_Renderer *renderer;
-    IMG_Animation *anim;
-    SDL_Texture **textures;
-    Uint32 flags;
-    int i, j, w, h, done;
-    int once = 0;
-    int current_frame, delay;
-    SDL_Event event;
-
-    (void)argc;
-
-    /* Check command line usage */
-    if ( ! argv[1] ) {
-        SDL_Log("Usage: %s [-fullscreen] <image_file> ...\n", argv[0]);
-        return(1);
+int main(int argc,char *argv[]){
+    //Inicializacion de SDL
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0){
+        SDL_Log("Incapaz de inicializar SDL: %s", SDL_GetError());
+        return 1;
     }
 
-    flags = SDL_WINDOW_HIDDEN;
-    for ( i=1; argv[i]; ++i ) {
-        if ( SDL_strcmp(argv[i], "-fullscreen") == 0 ) {
-            SDL_HideCursor();
-            flags |= SDL_WINDOW_FULLSCREEN;
-        }
+    // Obtengo la maxima resolucion de la pantalla
+    SDL_DisplayMode DM;
+    SDL_GetDesktopDisplayMode(0, &DM);
+
+    //Creacion de la ventana
+    SDL_Window *ventana = SDL_CreateWindow("Desplegable",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,DM.w,DM.h,SDL_WINDOW_FULLSCREEN);
+    if(ventana == NULL){
+        SDL_Log("Incapaz de crear la ventana: %s", SDL_GetError());
+        return 1;
     }
 
-    if (SDL_Init(SDL_INIT_VIDEO) == -1) {
-        SDL_Log("SDL_Init(SDL_INIT_VIDEO) failed: %s\n", SDL_GetError());
-        return(2);
-    }
+    SDL_Surface *screen_surface = SDL_GetWindowSurface(ventana);
+    int running = 1;
+    SDL_Event evento;
 
-    if (SDL_CreateWindowAndRenderer(0, 0, flags, &window, &renderer) < 0) {
-        SDL_Log("SDL_CreateWindowAndRenderer() failed: %s\n", SDL_GetError());
-        return(2);
-    }
+    SDL_Rect rect;
+    rect.x= 100;
+    rect.y = 100;
+    rect.w = 50;
+    rect.h = 50;
 
-    for ( i=1; argv[i]; ++i ) {
-        if ( SDL_strcmp(argv[i], "-fullscreen") == 0 ) {
-            continue;
-        }
+    SDL_Point mouse;
 
-        if ( SDL_strcmp(argv[i], "-once") == 0 ) {
-            once = 1;
-            continue;
-        }
-
-        /* Open the image file */
-        anim = IMG_LoadAnimation(argv[i]);
-        if (!anim) {
-            SDL_Log("Couldn't load %s: %s\n", argv[i], SDL_GetError());
-            continue;
-        }
-        w = anim->w;
-        h = anim->h;
-
-        textures = (SDL_Texture **)SDL_calloc(anim->count, sizeof(*textures));
-        if (!textures) {
-            SDL_Log("Couldn't allocate textures\n");
-            IMG_FreeAnimation(anim);
-            continue;
-        }
-        for (j = 0; j < anim->count; ++j) {
-            textures[j] = SDL_CreateTextureFromSurface(renderer, anim->frames[j]);
-        }
-        current_frame = 0;
-
-        /* Show the window */
-        SDL_SetWindowTitle(window, argv[i]);
-        SDL_SetWindowSize(window, w, h);
-        SDL_ShowWindow(window);
-
-        done = 0;
-        while ( ! done ) {
-            while ( SDL_PollEvent(&event) ) {
-                switch (event.type) {
-                    case SDL_EVENT_KEY_UP:
-                        switch (event.key.keysym.sym) {
-                            case SDLK_LEFT:
-                                if ( i > 1 ) {
-                                    i -= 2;
-                                    done = 1;
-                                }
-                                break;
-                            case SDLK_RIGHT:
-                                if ( argv[i+1] ) {
-                                    done = 1;
-                                }
-                                break;
-                            case SDLK_ESCAPE:
-                            case SDLK_q:
-                                argv[i+1] = NULL;
-                                SDL_FALLTHROUGH;
-                            case SDLK_SPACE:
-                            case SDLK_TAB:
-                            done = 1;
-                            break;
-                            default:
-                            break;
-                        }
-                        break;
-                    case SDL_EVENT_MOUSE_BUTTON_DOWN:
-                        done = 1;
-                        break;
-                    case SDL_EVENT_QUIT:
-                        argv[i+1] = NULL;
-                        done = 1;
-                        break;
-                    default:
-                        break;
+    while(running == 1){
+        while(SDL_PollEvent(&evento)){
+            if(evento.type == SDL_QUIT){
+                running = 0;
+            }
+            if(evento.type == SDL_KEYDOWN){
+                SDL_Keycode key = evento.key.keysym.sym;
+                if(key == SDLK_ESCAPE){
+                    running =0;
                 }
             }
-            /* Draw a background pattern in case the image has transparency */
-            draw_background(renderer, w, h);
-
-            /* Display the image */
-            SDL_RenderTexture(renderer, textures[current_frame], NULL, NULL);
-            SDL_RenderPresent(renderer);
-
-            if (anim->delays[current_frame]) {
-                delay = anim->delays[current_frame];
-            } else {
-                delay = 100;
-            }
-            SDL_Delay(delay);
-
-            current_frame = (current_frame + 1) % anim->count;
-
-            if (once && current_frame == 0) {
-                break;
+            if(evento.type == SDL_MOUSEBUTTONDOWN){
+                mouse.x = evento.button.x;
+                mouse.y = evento.button.y;
+                SDL_Log("Hice CLICK en (%d,%d)",mouse.x,mouse.y);
             }
         }
 
-        for (j = 0; j < anim->count; ++j) {
-            SDL_DestroyTexture(textures[j]);
-        }
-        IMG_FreeAnimation(anim);
+        SDL_FillRect(screen_surface, NULL, SDL_MapRGB(screen_surface->format, 255, 120, 25));
+
+        rect.x ++;
+        rect.y ++;
+
+        SDL_FillRect(screen_surface, &rect, SDL_MapRGB(screen_surface->format, 120, 25, 255));
+
+        SDL_UpdateWindowSurface(ventana);
+
+        SDL_Delay(DELAY);
     }
 
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-
-    /* We're done! */
+    //Destruccion de la ventana y cierre de SDL
+    SDL_FreeSurface(screen_surface);
+    SDL_DestroyWindow(ventana);
     SDL_Quit();
-    return(0);
+
+    return 0;
 }
