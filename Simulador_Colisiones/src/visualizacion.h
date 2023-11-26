@@ -153,6 +153,12 @@ int inicializado_de_recursos(Recursos *recursos) {
     recursos->cuadro_contador.x = 0;
     recursos->cuadro_contador.y = 30;
 
+    //ASignacion de valores para el cuadro del video
+    recursos->cuadro_video.x = 0;
+    recursos->cuadro_video.y = 0;
+    recursos->cuadro_video.w = recursos->DM.w;
+    recursos->cuadro_video.h = recursos->DM.h;
+
     //Inicializo otras variables
     recursos->running = 1;
     recursos->contador_colisiones = 0;
@@ -160,22 +166,6 @@ int inicializado_de_recursos(Recursos *recursos) {
     recursos->frame_actual = 0;
 
     return 0; // Exito al inicializar los recursos 
-}
-
-int videos_iniciales(Recursos *recursos){
-    for (int j = 0; j < recursos->video_historia->count; ++j) {
-        recursos->textura_video_historia[j] = SDL_CreateTextureFromSurface(recursos->render, recursos->video_historia->frames[j]);
-    }
-
-
-
-
-    SDL_free(recursos->textura_video_historia);
-    SDL_free(recursos->textura_video_inicio);
-    IMG_FreeAnimation(recursos->video_historia);
-    IMG_FreeAnimation(recursos->video_inicio);
-
-    return 0;
 }
 
 void finalizacion_de_recursos_y_librerias(SDL_Rect *particulas,Recursos *recursos){
@@ -204,6 +194,22 @@ void finalizacion_de_recursos_y_librerias(SDL_Rect *particulas,Recursos *recurso
     Mix_CloseAudio();
     TTF_Quit();
     SDL_Quit();
+}
+
+void liberar_video(Recursos *recursos){
+    //Destruyo las texturas de los frames del video
+    for (int j = 0; j < recursos->video_historia->count; ++j) {
+        SDL_DestroyTexture(recursos->textura_video_historia[j]);
+    }
+
+    for (int j = 0; j < recursos->video_inicio->count; ++j) {
+        SDL_DestroyTexture(recursos->textura_video_inicio[j]);
+    }
+
+    SDL_free(recursos->textura_video_historia);
+    SDL_free(recursos->textura_video_inicio);
+    IMG_FreeAnimation(recursos->video_historia);
+    IMG_FreeAnimation(recursos->video_inicio);
 }
 
 //Funciones de eventos
@@ -331,6 +337,60 @@ SDL_Rect* control_de_eventos(Recursos *recursos,int *cantidad_particulas,SDL_Rec
 }
 
 // Funcion de visualizado
+int videos_iniciales(Recursos *recursos){
+    int video = 0; //Si es 0 se ejecuta video de historia, si es 1 video de inicio
+    
+    while(recursos->running){
+        if(SDL_PollEvent(&(recursos->evento))){
+            if(recursos->evento.type == SDL_QUIT){    //Si se aprieta la X de la ventana para salir
+                recursos->running = 0;
+            }
+            if(recursos->evento.type == SDL_KEYDOWN){     //Si se aprieta una tecla
+                SDL_Keycode key = recursos->evento.key.keysym.sym;
+                if(key == SDLK_ESCAPE){
+                    recursos->running = 0;
+                }
+            }
+        }
+        if(video == 0){     //Video Historia
+            SDL_RenderCopy(recursos->render, recursos->textura_video_historia[recursos->frame_actual], NULL, &recursos->cuadro_video);
+            SDL_RenderPresent(recursos->render);
+
+            if (recursos->video_historia->delays[recursos->frame_actual]) {
+                recursos->delay_video = recursos->video_historia->delays[recursos->frame_actual];
+            } else {
+                recursos->delay_video = 100;
+            }
+            SDL_Delay(recursos->delay_video);
+
+            recursos->frame_actual++;
+            if(recursos->video_historia->count == recursos->frame_actual){
+                recursos->frame_actual = 0;
+                video = 1;
+            }
+
+        }
+        else{               //Video Inicio
+            SDL_RenderCopy(recursos->render, recursos->textura_video_inicio[recursos->frame_actual], NULL, &recursos->cuadro_video);
+            SDL_RenderPresent(recursos->render);
+
+            if (recursos->video_inicio->delays[recursos->frame_actual]) {
+                recursos->delay_video = recursos->video_inicio->delays[recursos->frame_actual];
+            } else {
+                recursos->delay_video = 100;
+            }
+            SDL_Delay(recursos->delay_video);
+
+            recursos->frame_actual = (recursos->frame_actual + 1) % recursos->video_inicio->count;  //Permanece en bucle
+        }
+
+    }
+
+    liberar_video(recursos);
+
+    return 0;
+}
+
 void visualizacion(SDL_Rect *particulas, Recursos *recursos, int cantidad_particulas) {
     //Se actualiza la textura del texto
     sprintf(recursos->texto_colisiones, "Colisiones: %d", recursos->contador_colisiones);

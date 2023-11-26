@@ -33,6 +33,14 @@ int main(int argc,char *argv[]){
         return 0;
     }
 
+    //Muestro los videos iniciales
+    if(videos_iniciales(&recursos) == 1){
+        finalizacion_de_recursos_y_librerias(particulas,&recursos);
+        return 0;
+    }
+
+    recursos.running = 1;   //Le reasigno 1 para que se ejecute el siguiente bucle
+
     //Ciclo de la simulacion
     while(recursos.running == 1){
         //Verifico los posibles eventos que esten ocurriendo(Alguna pulsacion de tecla, etc)
