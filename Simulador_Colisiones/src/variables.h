@@ -66,6 +66,8 @@ typedef struct {
     SDL_Rect cuadro_contador;
     SDL_Rect cuadro_video;
     SDL_Rect cuadro_texto_trasero;
+    SDL_Rect cuadro_texto_peso_perro;
+    SDL_Rect cuadro_texto_peso_gato;
     
     //Variables de la ventana donde se imprimira
     SDL_Window *ventana;

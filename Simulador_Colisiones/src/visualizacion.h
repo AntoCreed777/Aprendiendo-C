@@ -490,20 +490,33 @@ void visualizacion(SDL_Rect *particulas, Recursos *recursos, int cantidad_partic
 
     //Se agregan las particulas a la pantalla
     for (int i = 0; i < cantidad_particulas; i++) {
-        if (particulas[i].p%2==0){
-            SDL_RenderCopy(recursos->render, recursos->textura_gato, NULL, &particulas[i]);
-        }
-        else{
-            SDL_RenderCopy(recursos->render, recursos->textura_perro, NULL, &particulas[i]);
-        }
-        //SDL_SetRenderDrawColor(recursos->render, 240, 50, 250, 255);
-        //SDL_RenderFillRect(recursos->render, &particulas[i]);
-
         sprintf(recursos->texto_peso, "%d", particulas[i].p);
         recursos->surface_peso = TTF_RenderText_Solid(recursos->font, recursos->texto_peso, recursos->colorTexto);
         recursos->textura_peso = SDL_CreateTextureFromSurface(recursos->render, recursos->surface_peso);
         SDL_FreeSurface(recursos->surface_peso);
-        SDL_RenderCopy(recursos->render, recursos->textura_peso, NULL, &(particulas[i]));
+        
+        if (particulas[i].p%2==0){
+            SDL_RenderCopy(recursos->render, recursos->textura_gato, NULL, &particulas[i]);
+
+            recursos->cuadro_texto_peso_gato.x = particulas[i].x + (particulas[i].w / 4);
+            recursos->cuadro_texto_peso_gato.y = particulas[i].y + (particulas[i].h / 4);
+            recursos->cuadro_texto_peso_gato.w = particulas[i].w / 6;
+            recursos->cuadro_texto_peso_gato.h = particulas[i].h / 6;
+
+            SDL_RenderCopy(recursos->render, recursos->textura_peso, NULL, &(recursos->cuadro_texto_peso_gato));
+        }
+        else{
+            SDL_RenderCopy(recursos->render, recursos->textura_perro, NULL, &particulas[i]);
+            
+            recursos->cuadro_texto_peso_perro.x = particulas[i].x + (particulas[i].w / 3);
+            recursos->cuadro_texto_peso_perro.y = particulas[i].y + (particulas[i].h / 4);
+            recursos->cuadro_texto_peso_perro.w = particulas[i].w / 6;
+            recursos->cuadro_texto_peso_perro.h = particulas[i].h / 6;
+
+            SDL_RenderCopy(recursos->render, recursos->textura_peso, NULL, &(recursos->cuadro_texto_peso_perro));
+        }
+        //SDL_SetRenderDrawColor(recursos->render, 240, 50, 250, 255);
+        //SDL_RenderFillRect(recursos->render, &particulas[i]);
     }
 
     //Se agrega el Texto a la pantalla
