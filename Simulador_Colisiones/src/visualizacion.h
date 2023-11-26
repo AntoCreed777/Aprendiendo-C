@@ -78,12 +78,66 @@ int inicializado_de_recursos(Recursos *recursos) {
     recursos->render = SDL_CreateRenderer(recursos->ventana, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!recursos->render) {
         printf("Error al crear el renderer: %s\n", SDL_GetError());
+        TTF_CloseFont(recursos->font);
         SDL_DestroyWindow(recursos->ventana);
         return 1;
     }
 
     // Maximizo la ventana
     SDL_MaximizeWindow(recursos->ventana);
+
+    //Cargo los videos en sus respectivas variables
+    recursos->video_historia = IMG_LoadAnimation("assets/historia.gif");
+    if (!recursos->video_historia) {
+        SDL_Log("No se pudo cargar el video de historia");
+        TTF_CloseFont(recursos->font);
+        SDL_DestroyWindow(recursos->ventana);
+        SDL_DestroyRenderer(recursos->render);
+        return 1;
+    }
+
+    recursos->video_inicio = IMG_LoadAnimation("assets/inicio.gif");
+    if (!recursos->video_inicio) {
+        SDL_Log("No se pudo cargar el video de inicio");
+        TTF_CloseFont(recursos->font);
+        IMG_FreeAnimation(recursos->video_historia);
+        SDL_DestroyWindow(recursos->ventana);
+        SDL_DestroyRenderer(recursos->render);
+        return 1;
+    }
+
+    //Creo la textura para los videos
+    recursos->textura_video_historia = (SDL_Texture **)SDL_calloc(recursos->video_historia->count, sizeof(*recursos->textura_video_historia));
+    if (!recursos->textura_video_historia) {
+        SDL_Log("No se pudo crear la textura del video de historia");
+        TTF_CloseFont(recursos->font);
+        IMG_FreeAnimation(recursos->video_historia);
+        IMG_FreeAnimation(recursos->video_inicio);
+        SDL_DestroyWindow(recursos->ventana);
+        SDL_DestroyRenderer(recursos->render);
+        return 1;
+    }
+
+    recursos->textura_video_inicio = (SDL_Texture **)SDL_calloc(recursos->video_inicio->count, sizeof(*recursos->textura_video_inicio));
+    if (!recursos->textura_video_inicio) {
+        SDL_Log("No se pudo crear la textura del video de inicio");
+        TTF_CloseFont(recursos->font);
+        SDL_free(recursos->textura_video_historia);
+        IMG_FreeAnimation(recursos->video_historia);
+        IMG_FreeAnimation(recursos->video_inicio);
+        SDL_DestroyWindow(recursos->ventana);
+        SDL_DestroyRenderer(recursos->render);
+        return 1;
+    }
+
+    //Cargo los frames en las texturas de video
+    for (int j = 0; j < recursos->video_historia->count; ++j) {
+        recursos->textura_video_historia[j] = SDL_CreateTextureFromSurface(recursos->render, recursos->video_historia->frames[j]);
+    }
+
+    for (int j = 0; j < recursos->video_inicio->count; ++j) {
+        recursos->textura_video_inicio[j] = SDL_CreateTextureFromSurface(recursos->render, recursos->video_inicio->frames[j]);
+    }
 
     //Le asigno los valores RGB del texto que se muestra en pantalla
     recursos->colorTexto.r = 250;
@@ -103,8 +157,25 @@ int inicializado_de_recursos(Recursos *recursos) {
     recursos->running = 1;
     recursos->contador_colisiones = 0;
     recursos->tiempo_inicial = time(NULL);
+    recursos->frame_actual = 0;
 
     return 0; // Exito al inicializar los recursos 
+}
+
+int videos_iniciales(Recursos *recursos){
+    for (int j = 0; j < recursos->video_historia->count; ++j) {
+        recursos->textura_video_historia[j] = SDL_CreateTextureFromSurface(recursos->render, recursos->video_historia->frames[j]);
+    }
+
+
+
+
+    SDL_free(recursos->textura_video_historia);
+    SDL_free(recursos->textura_video_inicio);
+    IMG_FreeAnimation(recursos->video_historia);
+    IMG_FreeAnimation(recursos->video_inicio);
+
+    return 0;
 }
 
 void finalizacion_de_recursos_y_librerias(SDL_Rect *particulas,Recursos *recursos){
