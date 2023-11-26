@@ -54,12 +54,18 @@ typedef struct {
 
     SDL_Texture **textura_video_historia;
     SDL_Texture **textura_video_inicio;
+
+    SDL_Texture *textura_gato;
+    SDL_Texture *textura_perro;
+
+    SDL_Texture *textura_fondo;
     
     //Cuadros de texto para imprimir en pantalla
     SDL_Rect cuadro_texto;
     SDL_Rect cuadro_tiempo_transcurrido;
     SDL_Rect cuadro_contador;
     SDL_Rect cuadro_video;
+    SDL_Rect cuadro_texto_trasero;
     
     //Variables de la ventana donde se imprimira
     SDL_Window *ventana;

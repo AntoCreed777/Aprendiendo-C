@@ -51,7 +51,7 @@ int inicializado_de_recursos(Recursos *recursos) {
     Mix_VolumeChunk(recursos->sonido_inicio, MIX_MAX_VOLUME);
 
     //Inicio la fuente en su respectiva variable
-    recursos->font = TTF_OpenFont("assets/Handlee-Regular.ttf", 24);
+    recursos->font = TTF_OpenFont("assets/PottaOne-Regular.ttf", 50);
 
     //Verifico que se haya inicido bien
     if (!recursos->font) {
@@ -141,17 +141,24 @@ int inicializado_de_recursos(Recursos *recursos) {
 
     //Le asigno los valores RGB del texto que se muestra en pantalla
     recursos->colorTexto.r = 250;
-    recursos->colorTexto.g = 170;
+    recursos->colorTexto.g = 130;
     recursos->colorTexto.b = 50;
     recursos->colorTexto.a = 255;
 
     //Asigna las posiciones de los cuadros de texto
+    recursos->cuadro_texto_trasero.x = 0;
+    recursos->cuadro_texto_trasero.y = (recursos->DM.h) - 3*70 - 10;
+    recursos->cuadro_texto_trasero.w = 870;
+    recursos->cuadro_texto_trasero.h = 3*70 + 10;
+
     recursos->cuadro_texto.x = 0;
-    recursos->cuadro_texto.y = 60;
+    recursos->cuadro_texto.y = (recursos->DM.h) - 70;
+
     recursos->cuadro_tiempo_transcurrido.x = 0;
-    recursos->cuadro_tiempo_transcurrido.y = 0;
+    recursos->cuadro_tiempo_transcurrido.y = (recursos->DM.h) - 3*70;
+
     recursos->cuadro_contador.x = 0;
-    recursos->cuadro_contador.y = 30;
+    recursos->cuadro_contador.y = (recursos->DM.h) - 2*70;
 
     //ASignacion de valores para el cuadro del video
     recursos->cuadro_video.x = 0;
@@ -164,6 +171,49 @@ int inicializado_de_recursos(Recursos *recursos) {
     recursos->contador_colisiones = 0;
     recursos->tiempo_inicial = time(NULL);
     recursos->frame_actual = 0;
+
+    //Inicializar imagenes
+    recursos->textura_gato = IMG_LoadTexture(recursos->render, "assets/gato_2.png");
+    if (recursos->textura_gato == NULL) {
+        SDL_Log("No se pudo crear la textura de la imagen del gato");
+        TTF_CloseFont(recursos->font);
+        SDL_free(recursos->textura_video_inicio);
+        SDL_free(recursos->textura_video_historia);
+        IMG_FreeAnimation(recursos->video_historia);
+        IMG_FreeAnimation(recursos->video_inicio);
+        SDL_DestroyWindow(recursos->ventana);
+        SDL_DestroyRenderer(recursos->render);
+        return 1;
+    }
+
+    recursos->textura_perro = IMG_LoadTexture(recursos->render, "assets/perro_2.png");
+    if (recursos->textura_perro == NULL) {
+        SDL_Log("No se pudo crear la textura de la imagen del perro");
+        TTF_CloseFont(recursos->font);
+        SDL_DestroyTexture(recursos->textura_gato);
+        SDL_free(recursos->textura_video_inicio);
+        SDL_free(recursos->textura_video_historia);
+        IMG_FreeAnimation(recursos->video_historia);
+        IMG_FreeAnimation(recursos->video_inicio);
+        SDL_DestroyWindow(recursos->ventana);
+        SDL_DestroyRenderer(recursos->render);
+        return 1;
+    }
+
+    recursos->textura_fondo = IMG_LoadTexture(recursos->render, "assets/fondo.png");
+    if (recursos->textura_fondo == NULL) {
+        SDL_Log("No se pudo crear la textura del fondo");
+        TTF_CloseFont(recursos->font);
+        SDL_DestroyTexture(recursos->textura_gato);
+        SDL_DestroyTexture(recursos->textura_perro);
+        SDL_free(recursos->textura_video_inicio);
+        SDL_free(recursos->textura_video_historia);
+        IMG_FreeAnimation(recursos->video_historia);
+        IMG_FreeAnimation(recursos->video_inicio);
+        SDL_DestroyWindow(recursos->ventana);
+        SDL_DestroyRenderer(recursos->render);
+        return 1;
+    }
 
     return 0; // Exito al inicializar los recursos 
 }
@@ -185,6 +235,8 @@ void finalizacion_de_recursos_y_librerias(SDL_Rect *particulas,Recursos *recurso
     SDL_DestroyTexture(recursos->textura_tiempo);
     SDL_DestroyTexture(recursos->textura_contador);
     SDL_DestroyTexture(recursos->textura_peso);
+    SDL_DestroyTexture(recursos->textura_gato);
+    SDL_DestroyTexture(recursos->textura_perro);
 
     //Destruccion de la ventana
     SDL_DestroyRenderer(recursos->render);
@@ -398,6 +450,16 @@ int videos_iniciales(Recursos *recursos){
 }
 
 void visualizacion(SDL_Rect *particulas, Recursos *recursos, int cantidad_particulas) {
+    //Limpia la ventana
+    SDL_SetRenderDrawColor(recursos->render, 0, 0, 0, 255);
+    SDL_RenderClear(recursos->render);
+    
+    //Textura del fondo
+    SDL_RenderCopy(recursos->render, recursos->textura_fondo, NULL, NULL);
+
+
+    SDL_RenderFillRect(recursos->render, &recursos->cuadro_texto_trasero);
+
     //Se actualiza la textura del texto
     sprintf(recursos->texto_colisiones, "Colisiones: %d", recursos->contador_colisiones);
     recursos->surface_colisiones = TTF_RenderText_Solid(recursos->font, recursos->texto_colisiones, recursos->colorTexto);
@@ -426,14 +488,16 @@ void visualizacion(SDL_Rect *particulas, Recursos *recursos, int cantidad_partic
     recursos->cuadro_contador.h = recursos->surface_contador->h;
     SDL_FreeSurface(recursos->surface_contador);
 
-    //Limpia la ventana
-    SDL_SetRenderDrawColor(recursos->render, 0, 0, 0, 255);
-    SDL_RenderClear(recursos->render);
-
     //Se agregan las particulas a la pantalla
     for (int i = 0; i < cantidad_particulas; i++) {
-        SDL_SetRenderDrawColor(recursos->render, 240, 50, 250, 255);
-        SDL_RenderFillRect(recursos->render, &particulas[i]);
+        if (particulas[i].p%2==0){
+            SDL_RenderCopy(recursos->render, recursos->textura_gato, NULL, &particulas[i]);
+        }
+        else{
+            SDL_RenderCopy(recursos->render, recursos->textura_perro, NULL, &particulas[i]);
+        }
+        //SDL_SetRenderDrawColor(recursos->render, 240, 50, 250, 255);
+        //SDL_RenderFillRect(recursos->render, &particulas[i]);
 
         sprintf(recursos->texto_peso, "%d", particulas[i].p);
         recursos->surface_peso = TTF_RenderText_Solid(recursos->font, recursos->texto_peso, recursos->colorTexto);
