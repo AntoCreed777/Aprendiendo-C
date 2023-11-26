@@ -41,6 +41,10 @@ int main(int argc,char *argv[]){
 
     recursos.running = 1;   //Le reasigno 1 para que se ejecute el siguiente bucle
 
+    //Comienzo la reproduccion del sonido de fondo
+    Mix_PlayChannel(0, recursos.sonido_fondo, -1);
+    Mix_VolumeChunk(recursos.sonido_fondo, MIX_MAX_VOLUME / volumen_fondo);
+
     //Ciclo de la simulacion
     while(recursos.running == 1){
         //Verifico los posibles eventos que esten ocurriendo(Alguna pulsacion de tecla, etc)

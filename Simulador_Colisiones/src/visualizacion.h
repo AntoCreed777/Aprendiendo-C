@@ -36,7 +36,8 @@ int inicializado_SDL2(){
 int inicializado_de_recursos(Recursos *recursos) {
 
     //Inicio los sonidos en sus respectivas variables
-    recursos->sonido_fondo = Mix_LoadWAV("assets/Sonido_Fondo.mp3");
+    recursos->sonido_fondo = Mix_LoadWAV("assets/sonido_Fondo.mp3");
+    recursos->sonido_inicio = Mix_LoadWAV("assets/sonido_inicio.mp3");
     recursos->sonido_golpe = Mix_LoadWAV("assets/right-cross-cross.mp3");
     recursos->sonido_pared = Mix_LoadWAV("assets/sonido_colision_pared.mp3");
 
@@ -46,9 +47,8 @@ int inicializado_de_recursos(Recursos *recursos) {
         return 1;
     }
 
-    //Comienzo la reproduccion del sonido de fondo
-    Mix_PlayChannel(0, recursos->sonido_fondo, -1);
-    Mix_VolumeChunk(recursos->sonido_fondo, MIX_MAX_VOLUME / volumen_fondo);
+    Mix_PlayChannel(0, recursos->sonido_inicio, -1);
+    Mix_VolumeChunk(recursos->sonido_inicio, MIX_MAX_VOLUME / volumen_fondo);
 
     //Inicio la fuente en su respectiva variable
     recursos->font = TTF_OpenFont("assets/Handlee-Regular.ttf", 24);

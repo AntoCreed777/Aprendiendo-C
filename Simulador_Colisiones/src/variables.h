@@ -28,6 +28,7 @@ typedef struct {
 
     //Valores para el sonido
     Mix_Chunk *sonido_fondo;
+    Mix_Chunk *sonido_inicio;
     Mix_Chunk *sonido_golpe;
     Mix_Chunk *sonido_pared;
 
