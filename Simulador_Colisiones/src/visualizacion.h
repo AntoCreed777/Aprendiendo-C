@@ -237,6 +237,7 @@ void finalizacion_de_recursos_y_librerias(SDL_Rect *particulas,Recursos *recurso
     SDL_DestroyTexture(recursos->textura_peso);
     SDL_DestroyTexture(recursos->textura_gato);
     SDL_DestroyTexture(recursos->textura_perro);
+    SDL_DestroyTexture(recursos->textura_peso);
 
     //Destruccion de la ventana
     SDL_DestroyRenderer(recursos->render);
@@ -488,6 +489,11 @@ void visualizacion(SDL_Rect *particulas, Recursos *recursos, int cantidad_partic
     recursos->cuadro_contador.h = recursos->surface_contador->h;
     SDL_FreeSurface(recursos->surface_contador);
 
+    //Se agrega el Texto a la pantalla
+    SDL_RenderCopy(recursos->render, recursos->textura_colisiones, NULL, &(recursos->cuadro_texto));
+    SDL_RenderCopy(recursos->render, recursos->textura_tiempo, NULL, &(recursos->cuadro_tiempo_transcurrido));
+    SDL_RenderCopy(recursos->render, recursos->textura_contador, NULL, &(recursos->cuadro_contador));
+
     //Se agregan las particulas a la pantalla
     for (int i = 0; i < cantidad_particulas; i++) {
         sprintf(recursos->texto_peso, "%d", particulas[i].p);
@@ -518,11 +524,6 @@ void visualizacion(SDL_Rect *particulas, Recursos *recursos, int cantidad_partic
         //SDL_SetRenderDrawColor(recursos->render, 240, 50, 250, 255);
         //SDL_RenderFillRect(recursos->render, &particulas[i]);
     }
-
-    //Se agrega el Texto a la pantalla
-    SDL_RenderCopy(recursos->render, recursos->textura_colisiones, NULL, &(recursos->cuadro_texto));
-    SDL_RenderCopy(recursos->render, recursos->textura_tiempo, NULL, &(recursos->cuadro_tiempo_transcurrido));
-    SDL_RenderCopy(recursos->render, recursos->textura_contador, NULL, &(recursos->cuadro_contador));
 
     // Se imprime la pantalla
     SDL_RenderPresent(recursos->render);
