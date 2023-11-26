@@ -48,7 +48,7 @@ int inicializado_de_recursos(Recursos *recursos) {
     }
 
     Mix_PlayChannel(0, recursos->sonido_inicio, -1);
-    Mix_VolumeChunk(recursos->sonido_inicio, MIX_MAX_VOLUME / volumen_fondo);
+    Mix_VolumeChunk(recursos->sonido_inicio, MIX_MAX_VOLUME);
 
     //Inicio la fuente en su respectiva variable
     recursos->font = TTF_OpenFont("assets/Handlee-Regular.ttf", 24);
@@ -326,6 +326,10 @@ SDL_Rect* control_de_eventos(Recursos *recursos,int *cantidad_particulas,SDL_Rec
             else if(key == SDLK_r){ //Se reinicia el contador de coliciones
                 recursos->contador_colisiones=0;
             }
+            else if(key == SDLK_c){     //limpia la pantalla de particulas
+                particulas = NULL;
+                (*cantidad_particulas) = 0;
+            }
         }
         if(recursos->evento.type == SDL_MOUSEBUTTONDOWN){ //Si se clickea con el mause
             recursos->mouse.x = recursos->evento.button.x;
@@ -346,10 +350,7 @@ int videos_iniciales(Recursos *recursos){
                 recursos->running = 0;
             }
             if(recursos->evento.type == SDL_KEYDOWN){     //Si se aprieta una tecla
-                SDL_Keycode key = recursos->evento.key.keysym.sym;
-                if(key == SDLK_ESCAPE){
-                    recursos->running = 0;
-                }
+                recursos->running = 0;
             }
         }
         if(video == 0){     //Video Historia
