@@ -1,19 +1,46 @@
-#include <SDL2/SDL.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <ctype.h>
-#include <time.h>
+#ifndef VARIABLES_H
+#define VARIABLES_H
+#include "variables.h"
+#endif // VARIABLES_H
 
-#define BOLD "\e[1m"
-#define WHITE "\e[7m"
-#define BLUE "\e[44m"
-#define NORMAL "\e[0m"
-
-#define CARACTERESMAXIMOS 100000
-#define modulo_direccion 8
-#define modulo_peso 11
+//Funciones de lectura
+void asignacion_direcciones(SDL_Rect *particula,int direccion){
+    switch (direccion)
+    {
+    case 0: //Derecha
+        particula->dx = 1;      //X
+        particula->dy = 0;      //Y
+        break;
+    case 1: //Derecha Arriba
+        particula->dx = 1;      //X
+        particula->dy = -1;     //Y
+        break;
+    case 2: //Arriba
+        particula->dx= 0 ;      //X
+        particula->dy = -1;     //Y
+        break;
+    case 3: //Arriba Izquierda
+        particula->dx = -1;     //X
+        particula->dy = -1;     //Y
+        break;
+    case 4: //Izquierda
+        particula->dx = -1;     //X
+        particula->dy = 0;      //Y
+        break;
+    case 5: //Izquierda Abajo
+        particula->dx= -1;      //X
+        particula->dy = 1;      //Y
+        break;
+    case 6: //Abajo
+        particula->dx = 0;      //X
+        particula->dy = 1;      //Y
+        break;
+    case 7: //Abajo Derecha
+        particula->dx = 1;      //X
+        particula->dy = 1;      //Y
+        break;
+    }
+}
 
 char* ingreso_string(){                                     //Getline casero
     printf("%sIngrese la direccion de su archivo: %s\n",BOLD,NORMAL);
@@ -26,14 +53,14 @@ char* ingreso_string(){                                     //Getline casero
     while((c=getchar())!='\n'){
         while(longitud>=capacidad-1){                       //Capacidad-1 para recervar espacio para '\0'
             capacidad+=4;
-            string=realloc(string,sizeof(char)*capacidad);     //Se redimenciona el string
+            string=(char*)realloc(string,sizeof(char)*capacidad);     //Se redimenciona el string
         }
         string[longitud]=c;                                     //Se asigna el caracter al string
         longitud++;                                             //Se aumenta la longitud
     }
 
     string[longitud]='\0';
-    string=realloc(string,sizeof(char)*(longitud+1));     //Se redimenciona el string al tamano real
+    string=(char*)realloc(string,sizeof(char)*(longitud+1));     //Se redimenciona el string al tamano real
     
     return string;
 }
@@ -74,7 +101,7 @@ SDL_Rect* CSV(FILE *p,int *contador){       //Funcion que recibe los datos separ
 
         particulas[*contador].x=numero1;                                           //Asignacion de la coordenada X de forma definitiva
         particulas[*contador].y=numero2;                                           //Asignacion de la coordenada Y de forma definitiva
-        particulas[*contador].d=numero3 % modulo_direccion;                        //Asignacion de la Direccion de forma definitiva
+        asignacion_direcciones(&particulas[*contador],numero3 % modulo_direccion); //Asignacion de la Direccion de forma definitiva                    
         particulas[*contador].p=numero4 % modulo_peso;                             //Asignacion de la Direccion de forma definitiva
         (*contador)++;                                                             //Aumento el contador de particulas en uno
     }
@@ -100,7 +127,7 @@ SDL_Rect* BINARIO(FILE *p,int *contador){                       //Funcion que re
                 }
                 else if((i+1)/32 == 3){                         //Al dato de la direccion le aplico el modulo para levarlo a valores dentro del rango
                     dato = dato % modulo_direccion;
-                    particulas[*contador].d=dato;               //Se asigna el dato de direccion al array
+                    asignacion_direcciones(&particulas[*contador],dato);    //Se asigna el dato de direccion al array
                 }
                 else if((i+1)/32 == 4){                         //Al dato del peso le aplico el modulo para levarlo a valores dentro del rango
                     dato = dato % modulo_peso;
@@ -128,7 +155,7 @@ SDL_Rect* TEXTO(FILE *p,int *contador){
 
                 particulas[*contador].x=x;                                                 //Asignacion de la coordenada X de forma definitiva
                 particulas[*contador].y=y;                                                 //Asignacion de la coordenada Y de forma definitiva
-                particulas[*contador].d=rand()%modulo_direccion;                           //Como no hay direccion lo asigno de forma random
+                asignacion_direcciones(&particulas[*contador],rand()%modulo_direccion);    //Como no hay direccion lo asigno de forma random
                 particulas[*contador].p=rand()%modulo_peso;                                //Como no hay peso lo asigno de forma random
                 
                 (*contador)++;                                                                      //Aumento el contador de particulas en uno
@@ -153,7 +180,7 @@ SDL_Rect* cuerpo_lectura(int *cantidad_particulas){
     if(tamano_archivo==0){                      //Verifico que el archivo no se encuentre vacio
         printf("%s%sError: El archivo se encuentra vacio%s",BOLD,BLUE,NORMAL);
         fclose(entrada);
-        return 0;
+        exit(0);
     }
     else{
         tipo_entrada=fgetc(entrada);       //Obtengo que tipo de entrada es (c=CSV,t=txt,b=binario)
@@ -181,23 +208,14 @@ SDL_Rect* cuerpo_lectura(int *cantidad_particulas){
     fclose(entrada);    //Cierro el arcivo porque ya no se va a usar mas
 
     //For que imprime en terminal el array con los datos ingresados
-    for(int i=0;i<(*cantidad_particulas);i++){
+    /*for(int i=0;i<(*cantidad_particulas);i++){
         printf("%s%s%u\t%u\t%u\t%u%s\n",BOLD,BLUE,particulas[i].x,particulas[i].y,particulas[i].d,particulas[i].p,NORMAL);
+    }*/
+
+    for(int i=0;i<(*cantidad_particulas);i++){ //Le doy dimencion a las particulas
+        particulas[i].h=tamano_particula;
+        particulas[i].w=tamano_particula;
     }
+
     return particulas;
-}
-
-int main(int argc,char *argv[]){
-    int cantidad_particulas=0;                                          //Guarda la cantidad de particulas ingresados
-    SDL_Rect *particulas=cuerpo_lectura(&cantidad_particulas);          //Array en donde se guardaran los datos
-
-////////////////////////////////////////////////////////////////////////////
-////////////////PARTE 2 Y 3/////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-
-
-    //Liberacion de la memoria usada en el programa
-    free(particulas);
-    SDL_Quit();
-    return 0;
 }
