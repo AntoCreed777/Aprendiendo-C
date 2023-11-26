@@ -214,20 +214,23 @@ void liberar_video(Recursos *recursos){
 
 //Funciones de eventos
 void guardado(SDL_Rect *particulas,int cantidad_particulas){
-    char nombre_carpeta[40]= "Guardado Colisionador Particulas";
+    char nombre_carpeta[33]= "Guardado Colisionador Particulas";
     if(access(nombre_carpeta,0) != 0){
         mkdir(nombre_carpeta);
     }
 
-    char nombre_archivo[55];
+    char nombre_destino[55];
+    char nombre_archivo[20];
     time_t tiempo;
     tiempo=time(NULL);
 
-    sprintf(nombre_archivo, "%s/Save_%ld.txt", nombre_carpeta, (long int) tiempo);
+    sprintf(nombre_archivo, "Save_%ld.txt", (long int) tiempo);
+    sprintf(nombre_destino, "%s/%s", nombre_carpeta,nombre_archivo);
 
-    FILE *salida = fopen(nombre_archivo,"w");
+    FILE *salida = fopen(nombre_destino,"w");
 
     fputc('c',salida);
+    fputc('\n',salida);
     for(int i=0; i<cantidad_particulas;i++){
         int aux_direccion;
         if(particulas[i].dx == 1 && particulas[i].dy == 0){aux_direccion = 0;}
@@ -241,6 +244,8 @@ void guardado(SDL_Rect *particulas,int cantidad_particulas){
 
         fprintf(salida,"%d;%d;%d;%d;\n",particulas[i].x,particulas[i].y,aux_direccion,particulas[i].p);
     }
+    printf("\nInformacion de las particulas guardado en:\n%s%sCarpeta:%s\t%s%s%s%s\n%s%sArchivo:%s\t%s%s%s%s",
+    BOLD,BLUE,NORMAL,BOLD,WHITE,nombre_carpeta,NORMAL,BOLD,BLUE,NORMAL,BOLD,WHITE,nombre_archivo,NORMAL);
 
     fclose(salida);
 }
