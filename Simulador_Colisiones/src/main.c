@@ -1,73 +1,63 @@
-#include <SDL2/SDL.h>
-#include <stdio.h>
-#include <stdlib.h>
+#ifndef ENTRADA_H
+#define ENTRADA_H
+#include "entrada.h"
+#endif // ENTRADA_H
 
-#define DELAY 5
+#ifndef VISUALIZACION_H
+#define VISUALIZACION_H
+#include "visualizacion.h"
+#endif // VISUALIZACION_H
 
+#ifndef COLICIONES_H
+#define COLICIONES_H
+#include "coliciones.h"
+#endif // COLICIONES_H
+
+//Cuerpo principal del Codigo
 int main(int argc,char *argv[]){
-    //Inicializacion de SDL
-    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0){
-        SDL_Log("Incapaz de inicializar SDL: %s", SDL_GetError());
-        return 1;
+    int cantidad_particulas=0;                                          //Guarda la cantidad de particulas ingresados
+    SDL_Rect *particulas=cuerpo_lectura(&cantidad_particulas);          //Array en donde se guardaran los datos
+
+    //Inicializacion de las librerias
+    if(inicializado_SDL2() == 1){free(particulas);return 0;}
+
+    //Creacion de la estructura de recursos
+    Recursos recursos;
+
+    //Inicializacion de los recursos
+    if(inicializado_de_recursos(&recursos) == 1){
+        free(particulas);
+        Mix_CloseAudio();
+        TTF_Quit();
+        SDL_Quit();
+        return 0;
     }
 
-    // Obtengo la maxima resolucion de la pantalla
-    SDL_DisplayMode DM;
-    SDL_GetDesktopDisplayMode(0, &DM);
-
-    //Creacion de la ventana
-    SDL_Window *ventana = SDL_CreateWindow("Desplegable",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,DM.w,DM.h,SDL_WINDOW_FULLSCREEN);
-    if(ventana == NULL){
-        SDL_Log("Incapaz de crear la ventana: %s", SDL_GetError());
-        return 1;
+    //Muestro los videos iniciales
+    if(videos_iniciales(&recursos) == 1){
+        finalizacion_de_recursos_y_librerias(particulas,&recursos);
+        return 0;
     }
 
-    SDL_Surface *screen_surface = SDL_GetWindowSurface(ventana);
-    int running = 1;
-    SDL_Event evento;
+    recursos.running = 1;   //Le reasigno 1 para que se ejecute el siguiente bucle
 
-    SDL_Rect rect;
-    rect.x= 100;
-    rect.y = 100;
-    rect.w = 50;
-    rect.h = 50;
+    //Comienzo la reproduccion del sonido de fondo
+    Mix_PlayChannel(0, recursos.sonido_fondo, -1);
+    Mix_VolumeChunk(recursos.sonido_fondo, MIX_MAX_VOLUME / volumen_fondo);
 
-    SDL_Point mouse;
+    //Ciclo de la simulacion
+    while(recursos.running == 1){
+        //Verifico los posibles eventos que esten ocurriendo(Alguna pulsacion de tecla, etc)
+        particulas = control_de_eventos(&recursos, &cantidad_particulas, particulas);
 
-    while(running == 1){
-        while(SDL_PollEvent(&evento)){
-            if(evento.type == SDL_QUIT){
-                running = 0;
-            }
-            if(evento.type == SDL_KEYDOWN){
-                SDL_Keycode key = evento.key.keysym.sym;
-                if(key == SDLK_ESCAPE){
-                    running =0;
-                }
-            }
-            if(evento.type == SDL_MOUSEBUTTONDOWN){
-                mouse.x = evento.button.x;
-                mouse.y = evento.button.y;
-                SDL_Log("Hice CLICK en (%d,%d)",mouse.x,mouse.y);
-            }
-        }
+        //Actualizo la pantalla
+        visualizacion(particulas,&recursos,cantidad_particulas);
 
-        SDL_FillRect(screen_surface, NULL, SDL_MapRGB(screen_surface->format, 255, 120, 25));
-
-        rect.x ++;
-        rect.y ++;
-
-        SDL_FillRect(screen_surface, &rect, SDL_MapRGB(screen_surface->format, 120, 25, 255));
-
-        SDL_UpdateWindowSurface(ventana);
-
-        SDL_Delay(DELAY);
+        //Calculo de la siguiente posicion y actualizacion de las direcciones de las particulas
+        colisiones(&recursos,particulas,cantidad_particulas);
     }
-
-    //Destruccion de la ventana y cierre de SDL
-    SDL_FreeSurface(screen_surface);
-    SDL_DestroyWindow(ventana);
-    SDL_Quit();
+    
+    finalizacion_de_recursos_y_librerias(particulas,&recursos);
 
     return 0;
 }
