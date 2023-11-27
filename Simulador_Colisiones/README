@@ -1,0 +1,93 @@
+Simulador de Colisiones (Entre Perros y Gatos)
+
+Creadores:
+
+  - Maria San Martin Salgado
+  - Antonio Benavides Puentes
+
+Indicaciones antes de Compilar:
+
+  - Las librerias de SDL se encuentran modificadas por lo que si o si deben usar las librerias de este proyecto, no sirven
+las que se descargan desde la pagina oficial de SDL.
+
+En el archivo "variables.h" se encuentran en la parte superior las definiciones de Variables Magicas que controlan :
+
+    - CARACTERESMAXIMOS: La cantidad de caracteres que lee cada ves del archivo entrante (Esto puede afectar en que corte
+    algunos datos y debido a esto ocurran errores inesperados).
+
+    - modulo_direccion: (NO SE DEBE MODIFICAR) Controla en cuantas direcciones se mueve la particula, en nuestro codigo
+    son 8 posibles direcciones.
+
+            3           2           1
+             \          |         /
+               \        |       /
+                 \      |     /
+                   \    |   /
+                     \  | /
+     4 ---------------------------------- 0
+                      / |\
+                    /   |  \
+                  /     |    \
+                /       |      \
+              /         |        \
+            5           6          7
+
+    - modulo_peso: Controla el limite de peso que puede tener una particula [0,modulo_peso - 1].
+
+    - tamano_particula: Controla el ancho y largo de las particulas.
+
+    - particulas_maximas: Define el limite de particulas que pueden estar en la simulacion simultaneamente.
+
+    - volumen_fondo: Controla el volumen de la musica de la simulacion, son inversamente proporcionales, esto se debe a
+    que el volumen se calcula como "Volumen maximo / volumen_fondo".
+
+    - genera_particulas: Controla cuantas particulas ""tratara"" de crear con cada pulsacion de la tecla "m", esto es devido a que
+    por cada particula intentara encontrar una posicion valida 2000 veces, sino encuentra una posicion valida, se saldra de a funcion
+
+IMPORTANTE:
+  El MAKEFILE no esta ni pensado para LINUX ni provado, si usa este sistema operativo por favor adapte el MAKEFILE para su sistema operativo
+  o en su defecto use Windows.
+
+Luego de Compilar y ejecutar el programa CON EL MAKEFILE se le solicitara la direccion de su archivo de entrada que debe ser si o si un .txt
+    - Ejemplo: C:\Users\anjeb\OneDrive\Documentos\GitHub\Aprendiendo-C\Simulador_Colisiones\TXT_de_Entrada\Csv.txt
+este archivo puede ser de 3 formas:
+
+    - CSV: Debe comenzar con la letra "c", luego vendran 4 datos numericos separados por ";" los cuales representan posicion en X, posicion en Y
+    direccion y peso de la particula respectivamente.
+
+        - Ejemplo:   c000;200;0;1; 800;200;4;8;  (Aqui hay 2 particulas con toda su informacion, si hay una particula con informacion faltante,
+        la ultima particula sera ignorada).
+
+    - BINARIO: Debe comenazar con una "b", luego vendran 128 numeros que representan los bits de 4 int (Numeros Enteros),los cuales representan
+    posicion en X, posicion en Y direccion y peso de la particula respectivamente.
+
+        - Ejemplo: b00000000000000000000000000001001000000000000000000000000000010010000000000000000000000000000001100000000000000000000000000000001
+          (Si no se encuentran los 128 numeros (bits) no tomara encuenta la particula).
+
+    - TEXTO: Debe comenazar con una "t", luego vendra el texto que usted desee, sin embargo los datos de cada particula se reconoseran en este formato
+    (X,Y) , cada uno de estos parentesis con numeros representan a una sola particula, si no posee numeros de al X o la Y separados por una "," no tomara en cuenta ese parentesis.
+
+        - Ejemplo: tEl primer objeto fue encontrado en la coordenada (40,50), mientras que otros dos fueron hallados en los puntos (55,55) y (0,0).
+                  Un cuarto objeto fue avistado en la coordenada invalida (80,80).
+
+IMPORTANTE: Tener especial consideracion con las coordenadas y #tamano_particula# con tal de que no se superpongan las particulas.
+Al ingresar aparecera una cinematica con una pequeña historia para brindar un poco de motivos para que esas particulas esten chocando.
+Al terminar la Cinematica entrara a un video de "START" esperando la interaccion del usuario.
+
+DURANTE EL TRANSCURSO DE LA CINEMATICA Y EL VIDEO DE "START" SE PUEDE SALTAR APRETANDO CUALQUIER TECLA.
+
+Las teclas que poseen comandos vinculados y sus funciones son las siguientes:
+
+    - m: Trata de crea #genera_particulas# en posiciones aleatorias y validas de la pantalla.
+
+    - k: Elimina una sola particula al azar de la simulacion.
+
+    - c: Elimina a todas las particula de la simulacion.
+
+    - g: Guarda las posiciones actuales de las particulas de la simulacion en un archivo que se guarda en una carpeta que el mismo programa crea si es que no existe, se indicara el nombre de la carpeta y del archivo por terminal.
+
+    - r: Reinicia el contador de particulas a 0.
+
+    - ESC: Cierra el programa si es que se encuentra en la simulacion, no en los videos iniciales.
+
+Si se desea ver las particulas como cuadrados solidos para poder ver los bordes de colision solo es necesario descomentar las lineas 524 y 525 de "visualizacion.h"
