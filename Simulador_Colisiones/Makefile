@@ -19,12 +19,12 @@ $(TARGET) : $(OBJS)
 $(OBJS_DIR)/%.o: src/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-.PHONY :run debug clean
+.PHONY: run debug clean
 
-run : $(TARGET)
+run: $(TARGET)
 	@./$(TARGET)
-debug : $(TARGET)
+debug: $(TARGET)
 	@gdb ./$(TARGET)
 clean:
 	@del .\bin\main.exe
-	@cls
+	@$(info Ejecutable eliminado)
