@@ -1,17 +1,11 @@
-#ifndef ENTRADA_H
-#define ENTRADA_H
-#include "entrada.h"
-#endif // ENTRADA_H
+#include <code/entrada.h>
+#include <code/visualizacion.h>
+#include <code/coliciones.h>
 
-#ifndef VISUALIZACION_H
-#define VISUALIZACION_H
-#include "visualizacion.h"
-#endif // VISUALIZACION_H
-
-#ifndef COLICIONES_H
-#define COLICIONES_H
-#include "coliciones.h"
-#endif // COLICIONES_H
+#ifndef VARIABLES_H
+#define VARIABLES_H
+#include <code/variables.h>
+#endif
 
 //Cuerpo principal del Codigo
 int main(int argc,char *argv[]){

@@ -1,12 +1,10 @@
-#ifndef ENTRADA_H
-#define ENTRADA_H
-#include "entrada.h"
-#endif // ENTRADA_H
+#include <code/entrada.h>
+#include <code/visualizacion.h>
 
 #ifndef VARIABLES_H
 #define VARIABLES_H
-#include "variables.h"
-#endif // VARIABLES_H
+#include <code/variables.h>
+#endif
 
 //Funciones de inicializado y cierre
 int inicializado_SDL2(){

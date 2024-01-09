@@ -1,7 +1,9 @@
+#include <code/entrada.h>
+
 #ifndef VARIABLES_H
 #define VARIABLES_H
-#include "variables.h"
-#endif // VARIABLES_H
+#include <code/variables.h>
+#endif
 
 //Funciones de lectura
 void asignacion_direcciones(SDL_Rect *particula,int direccion){

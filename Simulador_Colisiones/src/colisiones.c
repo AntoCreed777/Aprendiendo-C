@@ -1,12 +1,10 @@
-#ifndef ENTRADA_H
-#define ENTRADA_H
-#include "entrada.h"
-#endif // ENTRADA_H
+#include <code/entrada.h>
+#include <code/coliciones.h>
 
 #ifndef VARIABLES_H
 #define VARIABLES_H
-#include "variables.h"
-#endif // VARIABLES_H
+#include <code/variables.h>
+#endif
 
 void movimiento_particula(SDL_Rect *particula){
     //Movimiento +1
