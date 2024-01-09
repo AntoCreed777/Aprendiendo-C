@@ -12,12 +12,12 @@ endif
 
 all: $(TARGET)
 
+$(OBJS_DIR)/%.o: src/%.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 $(TARGET) : $(OBJS)
 	@$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 	@$(info Compilacion terminada)
-
-$(OBJS_DIR)/%.o: src/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
 
 .PHONY: run debug clean
 
